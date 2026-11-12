@@ -91,7 +91,7 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
-        <span id="loadingText" class="text-sm font-medium">正在同步「單字文法題庫」與「Reading」雙工作表...</span>
+        <span id="loadingText" class="text-sm font-medium">正在同步雙工作表題庫...</span>
       </div>
       <button onclick="fetchAllSheets()" class="text-xs underline hover:text-emerald-950">重新載入</button>
     </div>
@@ -101,7 +101,7 @@
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 space-y-4">
         <div class="flex items-center justify-between border-b pb-3">
           <h2 class="text-xl font-bold text-emerald-900">📊 管理者後台：學生刷題與學習狀況總覽</h2>
-          <button onclick="loadAdminData()" class="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-lg">🔄 重新整理數據</button>
+          <button onclick="loadAdminData()" class="px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold rounded-lg">🔄 重新整理</button>
         </div>
         <div id="adminStudentList" class="space-y-4"></div>
       </div>
@@ -109,7 +109,6 @@
 
     <!-- 1. 學生選單設定畫面 -->
     <section id="view-setup" class="space-y-6 no-print">
-      <!-- 月曆打卡區塊 -->
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
@@ -139,7 +138,7 @@
 
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-lg font-bold text-emerald-900">單元篩選（可複選，不選則預設該類別全部單元）</h2>
+          <h2 class="text-lg font-bold text-emerald-900">單元篩選（可複選，不選則預設全部單元）</h2>
           <button onclick="toggleAllCheckboxes('unit')" class="text-xs text-emerald-600 hover:underline">全選 / 取消全選</button>
         </div>
         <div id="unitFilters" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-56 overflow-y-auto p-1"></div>
@@ -170,7 +169,7 @@
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-emerald-100 flex flex-wrap items-center justify-between gap-3 no-print">
         <div class="flex items-center gap-3">
           <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg text-sm" id="quizProgressText">第 1 / 10 題</span>
-          <span class="text-xs text-slate-500">💡 提示：點擊題目或文章中任何不懂的英文單字，可立即查中文與聽發音！</span>
+          <span class="text-xs text-slate-500">💡 提示：點擊文章或題目中任何單字可查中文與聽發音！</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="text-sm font-bold text-emerald-700" id="quizScoreText">得分：0</span>
@@ -178,15 +177,15 @@
         </div>
       </div>
 
-      <!-- 閱讀文章與單字庫區塊（僅 Reading 閱讀類題目顯示） -->
-      <div id="readingPassageBox" class="hidden bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-6 shadow-sm space-y-4">
+      <!-- 閱讀文章置頂區塊（僅工作表 2 閱讀/克漏字顯示） -->
+      <div id="readingPassageBox" class="hidden bg-amber-50/80 border-2 border-amber-300 rounded-2xl p-6 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-amber-200 pb-2">
-          <span class="font-bold text-amber-900 text-base">📖 閱讀文章內文</span>
+          <span class="font-bold text-amber-900 text-base">📖 閱讀文章 / 克漏字內文</span>
           <span id="readingUnitTag" class="text-xs bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-medium"></span>
         </div>
         <div id="readingPassageContent" class="text-slate-800 leading-relaxed text-base whitespace-pre-line"></div>
-        <div id="wordBankBox" class="hidden bg-white p-4 rounded-xl border border-amber-300">
-          <p class="text-xs font-bold text-amber-800 mb-2">🔤 單字選填庫（點擊單字可查詢意思）：</p>
+        <div id="wordBankBox" class="hidden bg-white p-3 rounded-xl border border-amber-300">
+          <p class="text-xs font-bold text-amber-800 mb-1">🔤 單字庫：</p>
           <div id="wordBankList" class="flex flex-wrap gap-2"></div>
         </div>
       </div>
@@ -198,7 +197,7 @@
             <span id="qCatBadge" class="px-2.5 py-0.5 bg-teal-100 text-teal-800 text-xs font-bold rounded-md"></span>
             <span id="qUnitBadge" class="px-2.5 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md"></span>
           </div>
-          <h3 id="questionText" class="text-lg sm:text-xl font-bold text-slate-900 leading-relaxed"></h3>
+          <h3 id="questionTitleText" class="text-lg sm:text-xl font-bold text-slate-900 leading-relaxed"></h3>
         </div>
 
         <div id="optionsContainer" class="space-y-3"></div>
@@ -221,7 +220,7 @@
       </div>
     </section>
 
-    <!-- 3. 測驗總結畫面 -->
+    <!-- 3. 測驗總結 -->
     <section id="view-summary" class="hidden bg-white p-8 rounded-2xl shadow-sm border border-emerald-100 text-center space-y-6">
       <div class="text-5xl">🎉</div>
       <h2 class="text-2xl font-bold text-emerald-900">測驗完成！</h2>
@@ -249,7 +248,7 @@
       </div>
     </section>
 
-    <!-- 4. 錯題區畫面 -->
+    <!-- 4. 錯題本 -->
     <section id="view-wrong" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 flex flex-wrap items-center justify-between gap-4 no-print">
         <div>
@@ -264,7 +263,7 @@
       <div id="wrongListContainer" class="space-y-4"></div>
     </section>
 
-    <!-- 5. 可列印試卷及答案畫面 -->
+    <!-- 5. 列印試卷 -->
     <section id="view-print" class="hidden space-y-6">
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between no-print">
         <button onclick="switchView('setup')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-sm font-bold">← 返回選單</button>
@@ -275,31 +274,26 @@
 
   </main>
 
-  <!-- 即點即查單字彈出小字卡 -->
+  <!-- 單字即查 Modal -->
   <div id="wordLookupModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-50 hidden flex items-center justify-center p-4" onclick="closeWordModal(event)">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-emerald-200 space-y-4" onclick="event.stopPropagation()">
       <div class="flex items-start justify-between">
         <div>
           <div class="flex items-center gap-2">
             <h3 id="lookupWordTitle" class="text-2xl font-bold text-emerald-900">word</h3>
-            <button onclick="speakWord(currentLookupWord)" class="p-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition" title="聽發音">🔊</button>
+            <button onclick="speakWord(currentLookupWord)" class="p-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition">🔊</button>
           </div>
           <p id="lookupPhonetic" class="text-xs text-slate-400 font-mono mt-0.5"></p>
         </div>
         <button onclick="closeWordModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
-
       <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-100 space-y-1.5">
         <p class="text-xs font-bold text-emerald-700">中文解釋與詞性：</p>
         <p id="lookupMeaning" class="text-base font-bold text-slate-800">查詢中...</p>
         <p id="lookupEngDef" class="text-xs text-slate-500 italic"></p>
       </div>
-
       <div class="flex gap-2 pt-1">
-        <button id="addToVocabBtn" onclick="saveCurrentWordToVocab()"
-          class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow transition text-sm">
-          ➕ 加入單字庫
-        </button>
+        <button id="addToVocabBtn" onclick="saveCurrentWordToVocab()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow transition text-sm">➕ 加入單字庫</button>
         <button onclick="closeWordModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm">關閉</button>
       </div>
     </div>
@@ -309,21 +303,18 @@
   <div id="vocabModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeVocabModal(event)">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-amber-200" onclick="event.stopPropagation()">
       <div class="p-5 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h3 class="text-xl font-bold text-amber-900">📖 我的個人單字庫</h3>
-          <p class="text-xs text-slate-500">點擊閱讀文章或題目中的單字即可隨時收錄至此</p>
-        </div>
+        <h3 class="text-xl font-bold text-amber-900">📖 我的個人單字庫</h3>
         <button onclick="closeVocabModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">✕</button>
       </div>
       <div id="vocabListContainer" class="p-5 overflow-y-auto flex-1 space-y-3"></div>
       <div class="p-4 border-t border-slate-200 flex justify-between items-center bg-slate-50 rounded-b-2xl">
         <button onclick="exportVocabCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">📥 匯出單字表 (CSV)</button>
-        <button onclick="closeVocabModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl">關閉視窗</button>
+        <button onclick="closeVocabModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl">關閉</button>
       </div>
     </div>
   </div>
 
-  <!-- 管理員題庫設定 Modal -->
+  <!-- 題庫設定 Modal -->
   <div id="adminModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
       <h3 class="text-lg font-bold text-slate-900">⚙️ Google Sheet 題庫串接設定</h3>
@@ -369,7 +360,6 @@
     let sessionCorrectCount = 0;
     let sessionWrongList = [];
 
-    // ================= 登入驗證 =================
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
@@ -407,26 +397,15 @@
       location.reload();
     }
 
-    if (currentUser) {
-      initAppAfterLogin();
-    }
+    if (currentUser) initAppAfterLogin();
 
-    // ================= 雲端數據同步模擬 =================
-    function getCloudDB() {
-      return JSON.parse(localStorage.getItem('yh_cloud_db') || '{}');
-    }
-
-    function saveCloudDB(db) {
-      localStorage.setItem('yh_cloud_db', JSON.stringify(db));
-    }
+    function getCloudDB() { return JSON.parse(localStorage.getItem('yh_cloud_db') || '{}'); }
+    function saveCloudDB(db) { localStorage.setItem('yh_cloud_db', JSON.stringify(db)); }
 
     function recordUserSession(unitName, correctCount, wrongList) {
       if (!currentUser || currentUser === 'yhstella2@gmail.com') return;
       const db = getCloudDB();
-      if (!db[currentUser]) {
-        db[currentUser] = { sessions: [], calendar: {} };
-      }
-
+      if (!db[currentUser]) db[currentUser] = { sessions: [], calendar: {} };
       const todayStr = new Date().toISOString().slice(0, 10);
       const totalCorrectToday = (db[currentUser].calendar[todayStr]?.correct || 0) + correctCount;
 
@@ -443,11 +422,9 @@
         correct: totalCorrectToday,
         starred: totalCorrectToday >= 10
       };
-
       saveCloudDB(db);
     }
 
-    // ================= 雙工作表讀取 (單字文法題庫 & Reading) =================
     async function fetchGoogleSheetJSON(sheetName) {
       const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
       const res = await fetch(url);
@@ -471,10 +448,7 @@
         rows1.forEach((r, idx) => {
           const c = r.c || [];
           const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
-          const grade = val(0);
-          const category = val(1);
-          const unit = val(2);
-          const question = val(3);
+          const grade = val(0), category = val(1), unit = val(2), question = val(3);
           if (!grade || !question || grade === '年級') return;
 
           combined.push({
@@ -485,6 +459,7 @@
             unit: unit || '綜合單元',
             passage: '',
             wordBank: '',
+            questionNum: '',
             question,
             options: { A: val(4), B: val(5), C: val(6), D: val(7) },
             answer: val(8).toUpperCase(),
@@ -495,20 +470,15 @@
         console.warn('工作表 1 讀取異常:', err);
       }
 
-      // 2. 讀取工作表 2：Reading (A:年級, B:類別, C:單元, D:文章, E:單字庫, F:子題目, G~J:選項A-D, K:答案, L:解析)
+      // 2. 讀取工作表 2：Reading (A:年級, B:類別, C:單元, D:文章, E:單字庫, F:第幾格/題號, G~J:選項A-D, K:答案, L:解析)
       try {
         const data2 = await fetchGoogleSheetJSON(config.sheet2);
         const rows2 = data2.table.rows || [];
         rows2.forEach((r, idx) => {
           const c = r.c || [];
           const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
-          const grade = val(0);
-          const category = val(1);
-          const unit = val(2);
-          const passage = val(3);
-          const wordBank = val(4);
-          const question = val(5);
-          if (!grade || !question || grade === '年級') return;
+          const grade = val(0), category = val(1), unit = val(2), passage = val(3), wordBank = val(4), qNum = val(5);
+          if (!grade || !passage || grade === '年級') return;
 
           combined.push({
             id: `s2_${idx}`,
@@ -518,7 +488,8 @@
             unit: unit || '閱讀練習',
             passage,
             wordBank,
-            question,
+            questionNum: qNum || String(idx + 1),
+            question: `請選出空格 [${qNum || (idx + 1)}] 的最適選項：`,
             options: { A: val(6), B: val(7), C: val(8), D: val(9) },
             answer: val(10).toUpperCase(),
             explanation: val(11) || '無詳細解析'
@@ -533,12 +504,8 @@
       renderFilterCheckboxes();
     }
 
-    // ================= 動態選單渲染 =================
     function renderFilterCheckboxes() {
-      const grades = {};
-      const categories = {};
-      const units = {};
-
+      const grades = {}, categories = {}, units = {};
       allQuestions.forEach(q => {
         grades[q.grade] = (grades[q.grade] || 0) + 1;
         categories[q.category] = (categories[q.category] || 0) + 1;
@@ -555,13 +522,12 @@
       const container = document.getElementById(containerId);
       container.innerHTML = '';
       Object.entries(countMap).forEach(([label, count]) => {
-        const isReading = groupName === 'category' && (label.includes('閱讀') || label.includes('選填') || label.includes('素養'));
+        const isReading = groupName === 'category' && (label.includes('閱讀') || label.includes('克漏字') || label.includes('選填') || label.includes('素養'));
         const item = document.createElement('label');
         item.className = `flex items-center justify-between p-2.5 border rounded-xl cursor-pointer transition text-sm ${isReading ? 'border-amber-300 bg-amber-50/50 hover:bg-amber-100/60' : 'border-slate-200 hover:bg-emerald-50'}`;
         item.innerHTML = `
           <div class="flex items-center gap-2 truncate">
-            <input type="checkbox" name="${groupName}" value="${label}" onchange="updateMatchedCount()"
-              class="w-4 h-4 accent-emerald-600 rounded" />
+            <input type="checkbox" name="${groupName}" value="${label}" onchange="updateMatchedCount()" class="w-4 h-4 accent-emerald-600 rounded" />
             <span class="font-medium truncate">${label}</span>
           </div>
           <span class="text-xs text-slate-500 bg-white px-2 py-0.5 rounded-full border ml-1">${count}</span>
@@ -595,7 +561,6 @@
       document.getElementById('matchedCountHint').textContent = `符合條件共 ${matched.length} 題`;
     }
 
-    // ================= 點擊單字即查 + 語音 + 單字庫 =================
     function makeWordsClickable(text) {
       if (!text) return '';
       return text.replace(/([A-Za-z]{2,}(?:['-][A-Za-z]+)*)/g, (match) => {
@@ -608,21 +573,11 @@
       if (event) event.stopPropagation();
       const target = word.toLowerCase();
       currentLookupWord = word;
-
       const modal = document.getElementById('wordLookupModal');
       document.getElementById('lookupWordTitle').textContent = word;
       document.getElementById('lookupPhonetic').textContent = '載入音標中...';
       document.getElementById('lookupMeaning').textContent = '正在查詢中文解釋...';
       document.getElementById('lookupEngDef').textContent = '';
-
-      const addBtn = document.getElementById('addToVocabBtn');
-      const alreadyExists = myVocabList.some(v => v.word.toLowerCase() === target);
-      addBtn.textContent = alreadyExists ? '✅ 已在單字庫中' : '➕ 加入單字庫';
-      addBtn.disabled = alreadyExists;
-      addBtn.className = alreadyExists
-        ? 'flex-1 py-2.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl text-sm cursor-default'
-        : 'flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow transition text-sm';
-
       modal.classList.remove('hidden');
       speakWord(word);
 
@@ -637,12 +592,8 @@
         if (dictRes.ok) {
           const dictJson = await dictRes.json();
           const entry = dictJson[0];
-          phonetic = entry.phonetic || (entry.phonetics?.find(p => p.text)?.text) || '';
-          const firstMeaning = entry.meanings?.[0];
-          if (firstMeaning) {
-            const pos = firstMeaning.partOfSpeech ? `(${firstMeaning.partOfSpeech}) ` : '';
-            engDef = pos + (firstMeaning.definitions?.[0]?.definition || '');
-          }
+          phonetic = entry.phonetic || '';
+          engDef = entry.meanings?.[0]?.definitions?.[0]?.definition || '';
         }
       } catch (e) {}
 
@@ -650,21 +601,21 @@
         const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(target)}&langpair=en|zh-TW`);
         if (transRes.ok) {
           const transJson = await transRes.json();
-          zhMeaning = transJson.responseData?.translatedText || '查無中文釋義';
+          zhMeaning = transJson.responseData?.translatedText || '查無釋義';
         }
       } catch (e) {
-        zhMeaning = '取得中文翻譯失敗';
+        zhMeaning = '翻譯取得失敗';
       }
 
-      const resultObj = { word, phonetic, zhMeaning, engDef };
-      wordCache[target] = resultObj;
+      const resObj = { word, phonetic, zhMeaning, engDef };
+      wordCache[target] = resObj;
       localStorage.setItem('yh_word_cache', JSON.stringify(wordCache));
-      renderLookupResult(resultObj);
+      renderLookupResult(resObj);
     }
 
     function renderLookupResult(data) {
       currentLookupData = data;
-      document.getElementById('lookupPhonetic').textContent = data.phonetic || '/無音標資料/';
+      document.getElementById('lookupPhonetic').textContent = data.phonetic || '';
       document.getElementById('lookupMeaning').textContent = data.zhMeaning;
       document.getElementById('lookupEngDef').textContent = data.engDef;
     }
@@ -674,64 +625,50 @@
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(word);
       utter.lang = 'en-US';
-      utter.rate = 0.9;
       window.speechSynthesis.speak(utter);
     }
 
     function closeWordModal(e) {
-      if (!e || e.target.id === 'wordLookupModal') {
-        document.getElementById('wordLookupModal').classList.add('hidden');
-      }
+      if (!e || e.target.id === 'wordLookupModal') document.getElementById('wordLookupModal').classList.add('hidden');
     }
 
     function saveCurrentWordToVocab() {
       if (!currentLookupData) return;
-      const exists = myVocabList.some(v => v.word.toLowerCase() === currentLookupData.word.toLowerCase());
-      if (!exists) {
-        const currentQ = currentQuiz[currentIndex];
+      if (!myVocabList.some(v => v.word.toLowerCase() === currentLookupData.word.toLowerCase())) {
         myVocabList.unshift({
           word: currentLookupData.word,
           phonetic: currentLookupData.phonetic,
           meaning: currentLookupData.zhMeaning,
-          source: currentQ ? `${currentQ.grade} - ${currentQ.unit}` : '自主查詢',
+          source: '自主查詢',
           addedAt: new Date().toLocaleDateString()
         });
         localStorage.setItem('yh_my_vocab', JSON.stringify(myVocabList));
         updateBadges();
-        const addBtn = document.getElementById('addToVocabBtn');
-        addBtn.textContent = '✅ 已加入單字庫';
-        addBtn.disabled = true;
-        addBtn.className = 'flex-1 py-2.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl text-sm';
+        document.getElementById('addToVocabBtn').textContent = '✅ 已加入單字庫';
       }
     }
 
     function openVocabModal() {
       const container = document.getElementById('vocabListContainer');
-      if (myVocabList.length === 0) {
-        container.innerHTML = `<div class="text-center py-10 text-slate-400">目前單字庫是空的喔！<br><span class="text-xs">在閱讀文章或題目時，點擊任何英文單字即可加入收藏。</span></div>`;
-      } else {
-        container.innerHTML = myVocabList.map((item, idx) => `
-          <div class="p-4 rounded-xl border border-slate-200 bg-amber-50/30 flex items-center justify-between gap-3">
+      container.innerHTML = myVocabList.length === 0 ? `<div class="text-center py-10 text-slate-400">目前單字庫是空的喔！</div>` :
+        myVocabList.map((item, idx) => `
+          <div class="p-4 rounded-xl border bg-amber-50/30 flex items-center justify-between gap-3">
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-bold text-lg text-emerald-900">${item.word}</span>
                 <span class="text-xs text-slate-400 font-mono">${item.phonetic || ''}</span>
-                <button onclick="speakWord('${item.word}')" class="text-sm bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-full">🔊</button>
+                <button onclick="speakWord('${item.word}')">🔊</button>
               </div>
               <p class="text-sm font-medium text-slate-700 mt-1">${item.meaning}</p>
-              <p class="text-[11px] text-slate-400 mt-0.5">出處：${item.source} ｜ 收錄日期：${item.addedAt}</p>
             </div>
-            <button onclick="removeVocab(${idx})" class="text-xs text-rose-500 hover:underline px-2 py-1">移除</button>
+            <button onclick="removeVocab(${idx})" class="text-xs text-rose-500">移除</button>
           </div>
         `).join('');
-      }
       document.getElementById('vocabModal').classList.remove('hidden');
     }
 
     function closeVocabModal(e) {
-      if (!e || e.target.id === 'vocabModal') {
-        document.getElementById('vocabModal').classList.add('hidden');
-      }
+      if (!e || e.target.id === 'vocabModal') document.getElementById('vocabModal').classList.add('hidden');
     }
 
     function removeVocab(idx) {
@@ -742,30 +679,23 @@
     }
 
     function exportVocabCSV() {
-      if (myVocabList.length === 0) return alert('單字庫目前沒有單字可匯出！');
+      if (myVocabList.length === 0) return alert('無單字可匯出');
       const bom = '\uFEFF';
-      const rows = [['英文單字', '音標', '中文解釋', '出處', '收錄日期']];
-      myVocabList.forEach(v => rows.push([v.word, v.phonetic, v.meaning, v.source, v.addedAt]));
-      const csvContent = bom + rows.map(r => r.map(c => `"${(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const rows = [['英文單字', '音標', '中文解釋', '收錄日期']];
+      myVocabList.forEach(v => rows.push([v.word, v.phonetic, v.meaning, v.addedAt]));
+      const blob = new Blob([bom + rows.map(r => r.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `我的英文單字庫_${new Date().toISOString().slice(0,10)}.csv`;
+      link.download = `單字庫_${new Date().toISOString().slice(0,10)}.csv`;
       link.click();
     }
 
-    // ================= 線上測驗模式 =================
     function startQuizMode() {
       const matched = getFilteredQuestions();
-      if (matched.length === 0) return alert('沒有符合條件的題目，請重新調整勾選項目！');
-
+      if (matched.length === 0) return alert('沒有符合條件的題目！');
       const count = Math.min(parseInt(document.getElementById('questionCountInput').value) || 10, matched.length);
       currentQuiz = [...matched].sort(() => Math.random() - 0.5).slice(0, count);
-      currentIndex = 0;
-      score = 0;
-      sessionCorrectCount = 0;
-      sessionWrongList = [];
-
+      currentIndex = 0; score = 0; sessionCorrectCount = 0; sessionWrongList = [];
       switchView('quiz');
       renderCurrentQuestion();
     }
@@ -778,6 +708,7 @@
       document.getElementById('qCatBadge').textContent = q.category;
       document.getElementById('qUnitBadge').textContent = q.unit;
 
+      // 處理工作表 2 閱讀文章置頂
       const passageBox = document.getElementById('readingPassageBox');
       const wordBankBox = document.getElementById('wordBankBox');
       if (q.sourceSheet === 2 && q.passage) {
@@ -789,7 +720,7 @@
           wordBankBox.classList.remove('hidden');
           const words = q.wordBank.split(/[,，]/).map(w => w.trim()).filter(Boolean);
           document.getElementById('wordBankList').innerHTML = words.map(w =>
-            `<span class="px-3 py-1 bg-amber-100 text-amber-900 font-semibold rounded-lg text-sm border border-amber-300">${makeWordsClickable(w)}</span>`
+            `<span class="px-2.5 py-1 bg-amber-100 text-amber-900 font-semibold rounded-lg text-sm border border-amber-300">${makeWordsClickable(w)}</span>`
           ).join('');
         } else {
           wordBankBox.classList.add('hidden');
@@ -798,7 +729,7 @@
         passageBox.classList.add('hidden');
       }
 
-      document.getElementById('questionText').innerHTML = makeWordsClickable(q.question);
+      document.getElementById('questionTitleText').innerHTML = makeWordsClickable(q.question);
 
       const optContainer = document.getElementById('optionsContainer');
       optContainer.innerHTML = '';
@@ -808,10 +739,7 @@
         btn.id = `optBtn_${key}`;
         btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 transition flex items-start gap-3';
         btn.onclick = () => handleAnswer(key);
-        btn.innerHTML = `
-          <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 text-sm">${key}</span>
-          <span class="text-base text-slate-800 pt-0.5">${makeWordsClickable(q.options[key])}</span>
-        `;
+        btn.innerHTML = `<span class="w-7 h-7 rounded-full bg-slate-100 font-bold flex items-center justify-center shrink-0 text-sm">${key}</span><span class="text-base text-slate-800 pt-0.5">${makeWordsClickable(q.options[key])}</span>`;
         optContainer.appendChild(btn);
       });
 
@@ -827,141 +755,72 @@
         const btn = document.getElementById(`optBtn_${k}`);
         if (!btn) return;
         btn.onclick = null;
-        if (k === q.answer) {
-          btn.className = 'w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
-        } else if (k === selectedKey && !isCorrect) {
-          btn.className = 'w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
-        } else {
-          btn.className = 'w-full text-left p-4 rounded-xl border border-slate-200 opacity-60 flex items-start gap-3';
-        }
+        if (k === q.answer) btn.className = 'w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
+        else if (k === selectedKey && !isCorrect) btn.className = 'w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
+        else btn.className = 'w-full text-left p-4 rounded-xl border border-slate-200 opacity-60 flex items-start gap-3';
       });
 
       const fbBox = document.getElementById('feedbackBox');
-      const fbStatus = document.getElementById('feedbackStatus');
       fbBox.classList.remove('hidden');
-
       if (isCorrect) {
         sessionCorrectCount++;
         score += Math.round(100 / currentQuiz.length);
         document.getElementById('quizScoreText').textContent = `得分：${score}`;
         fbBox.className = 'p-5 rounded-xl border-l-4 border-emerald-500 bg-emerald-50/80 space-y-2';
-        fbStatus.className = 'font-bold text-lg text-emerald-700';
-        fbStatus.textContent = '✅ 答對了！太棒了！';
+        document.getElementById('feedbackStatus').textContent = '✅ 答對了！';
       } else {
         fbBox.className = 'p-5 rounded-xl border-l-4 border-rose-500 bg-rose-50/80 space-y-2';
-        fbStatus.className = 'font-bold text-lg text-rose-700';
-        fbStatus.textContent = `❌ 答錯了！你選了 (${selectedKey})`;
+        document.getElementById('feedbackStatus').textContent = `❌ 答錯了！你選了 (${selectedKey})`;
         addWrongQuestion(q, selectedKey);
         sessionWrongList.push({ ...q, userChoice: selectedKey });
       }
 
       document.getElementById('feedbackAnswer').textContent = `正確答案：(${q.answer}) ${q.options[q.answer] || ''}`;
       document.getElementById('feedbackExplanation').innerHTML = makeWordsClickable(q.explanation);
-
-      const nextBtn = document.getElementById('nextQuestionBtn');
-      nextBtn.classList.remove('hidden');
-      nextBtn.textContent = currentIndex < currentQuiz.length - 1 ? '下一題 →' : '查看測驗總結 🎉';
+      document.getElementById('nextQuestionBtn').classList.remove('hidden');
     }
 
     function nextQuestion() {
-      if (currentIndex < currentQuiz.length - 1) {
-        currentIndex++;
-        renderCurrentQuestion();
-      } else {
-        showSummary();
-      }
+      if (currentIndex < currentQuiz.length - 1) { currentIndex++; renderCurrentQuestion(); }
+      else showSummary();
     }
 
-    function finishQuizEarly() {
-      showSummary();
-    }
+    function finishQuizEarly() { showSummary(); }
 
     function showSummary() {
       switchView('summary');
-      const unitName = currentQuiz[0]?.unit || '綜合練習';
-      recordUserSession(unitName, sessionCorrectCount, sessionWrongList);
+      recordUserSession(currentQuiz[0]?.unit || '練習', sessionCorrectCount, sessionWrongList);
       renderCalendar();
-
       document.getElementById('sumTotal').textContent = currentQuiz.length;
       document.getElementById('sumCorrect').textContent = sessionCorrectCount;
       document.getElementById('sumScore').textContent = score;
     }
 
-    // ================= 月曆打卡 =================
     function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
       const title = document.getElementById('calendarMonthTitle');
       const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-
+      const year = now.getFullYear(), month = now.getMonth();
       title.textContent = `${year} 年 ${month + 1} 月`;
       grid.innerHTML = ['日', '一', '二', '三', '四', '五', '六'].map(d => `<div class="font-bold text-emerald-800 py-1">${d}</div>`).join('');
-
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      const db = getCloudDB();
-      const userCalendar = db[currentUser]?.calendar || {};
-
-      for (let i = 0; i < firstDay; i++) {
-        grid.innerHTML += `<div></div>`;
-      }
-
+      const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
+      const db = getCloudDB(), userCalendar = db[currentUser]?.calendar || {};
+      for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
       for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const record = userCalendar[dateStr];
-        const isStarred = record?.starred;
-
-        grid.innerHTML += `
-          <div class="h-14 border rounded-xl flex flex-col items-center justify-center p-1 ${isStarred ? 'bg-amber-50 border-amber-300' : 'bg-slate-50/50'}">
-            <span class="text-xs text-slate-600">${day}</span>
-            <span class="text-base">${isStarred ? '⭐' : ''}</span>
-          </div>
-        `;
+        const starred = userCalendar[dateStr]?.starred;
+        grid.innerHTML += `<div class="h-14 border rounded-xl flex flex-col items-center justify-center p-1 ${starred ? 'bg-amber-50 border-amber-300' : 'bg-slate-50/50'}"><span class="text-xs">${day}</span><span>${starred ? '⭐' : ''}</span></div>`;
       }
     }
 
-    // ================= 管理員後台 =================
     function loadAdminData() {
       const container = document.getElementById('adminStudentList');
       const db = getCloudDB();
       const users = Object.keys(db);
-
-      if (users.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 text-center py-6">目前尚無學生的刷題紀錄。</p>`;
-        return;
-      }
-
-      container.innerHTML = users.map(email => {
-        const data = db[email];
-        const sessions = data.sessions || [];
-        const totalCorrect = sessions.reduce((acc, s) => acc + s.correct, 0);
-        const totalWrong = sessions.reduce((acc, s) => acc + s.wrong, 0);
-
-        return `
-          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
-            <div>
-              <span class="font-bold text-base text-emerald-900">${email}</span>
-              <span class="ml-2 text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">答對：${totalCorrect}</span>
-              <span class="ml-1 text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">答錯：${totalWrong}</span>
-            </div>
-            <div class="space-y-2 pt-2 border-t border-slate-200">
-              ${sessions.map((s) => `
-                <div class="p-3 bg-white rounded-lg border border-slate-200 text-sm space-y-1">
-                  <div class="flex justify-between items-center">
-                    <span class="font-medium text-slate-800">📅 ${s.date} ｜ <strong>${s.unit}</strong></span>
-                    <span class="text-xs text-slate-500">答對 ${s.correct} / 答錯 ${s.wrong}</span>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
+      container.innerHTML = users.length === 0 ? `<p class="text-slate-400 text-center py-6">目前尚無學生紀錄</p>` :
+        users.map(email => `<div class="p-4 rounded-xl border bg-slate-50"><p class="font-bold text-emerald-900">${email}</p></div>`).join('');
     }
 
-    // ================= 錯題本 =================
     function addWrongQuestion(q, userChoice) {
       if (!wrongQuestions.some(item => item.id === q.id)) {
         wrongQuestions.unshift({ ...q, userChoice, wrongDate: new Date().toLocaleDateString() });
@@ -972,105 +831,39 @@
 
     function renderWrongList() {
       const container = document.getElementById('wrongListContainer');
-      if (wrongQuestions.length === 0) {
-        container.innerHTML = `<div class="bg-white p-10 rounded-2xl text-center text-slate-400">目前沒有錯題紀錄，繼續保持！🌟</div>`;
-        return;
-      }
-      container.innerHTML = wrongQuestions.map((q, i) => `
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold px-2.5 py-1 bg-rose-100 text-rose-800 rounded-lg">${q.grade} ｜ ${q.category} ｜ ${q.unit}</span>
-            <span class="text-xs text-slate-400">記錄日期：${q.wrongDate}</span>
+      container.innerHTML = wrongQuestions.length === 0 ? `<div class="bg-white p-10 rounded-2xl text-center text-slate-400">目前沒有錯題紀錄！🌟</div>` :
+        wrongQuestions.map((q, i) => `
+          <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-2">
+            ${q.passage ? `<div class="p-3 bg-amber-50 rounded-xl text-sm whitespace-pre-line">${q.passage}</div>` : ''}
+            <p class="font-bold">${i + 1}. ${q.question}</p>
+            <p class="text-sm text-slate-600">解析：${q.explanation}</p>
           </div>
-          ${q.passage ? `<div class="p-3 bg-amber-50 rounded-xl text-sm text-slate-700 whitespace-pre-line">${q.passage}</div>` : ''}
-          <p class="font-bold text-slate-900">${i + 1}. ${q.question}</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-            ${['A','B','C','D'].filter(k => q.options[k]).map(k => `
-              <div class="p-2 rounded-lg border ${k === q.answer ? 'bg-emerald-50 border-emerald-400 font-bold text-emerald-900' : (k === q.userChoice ? 'bg-rose-50 border-rose-300 text-rose-800' : 'border-slate-100')}">
-                (${k}) ${q.options[k]}
-              </div>
-            `).join('')}
-          </div>
-          <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl"><strong>💡 解析：</strong>${q.explanation}</p>
-        </div>
-      `).join('');
+        `).join('');
     }
 
     function clearWrongQuestions() {
-      if (confirm('確定要清空所有錯題紀錄嗎？')) {
-        wrongQuestions = [];
-        localStorage.setItem('yh_wrong_questions', '[]');
-        updateBadges();
-        renderWrongList();
-      }
+      if (confirm('確定清空？')) { wrongQuestions = []; localStorage.setItem('yh_wrong_questions', '[]'); updateBadges(); renderWrongList(); }
     }
 
-    // ================= 列印試卷 =================
     function startPrintMode() {
       const matched = getFilteredQuestions();
-      if (matched.length === 0) return alert('沒有符合條件的題目，請先勾選年級或類別！');
-      const count = Math.min(parseInt(document.getElementById('questionCountInput').value) || 10, matched.length);
-      const selected = [...matched].sort(() => Math.random() - 0.5).slice(0, count);
-
-      let testHtml = `
-        <div class="border-b-2 border-slate-800 pb-4 mb-6 flex justify-between items-end">
-          <div>
-            <h1 class="text-2xl font-bold">優華數位英文學習評量試卷</h1>
-            <p class="text-sm text-slate-600 mt-1">班級/年級：__________ 姓名：______________ 得分：__________</p>
-          </div>
-          <span class="text-xs text-slate-500">共 ${selected.length} 題</span>
-        </div>
-        <div class="space-y-6">
-      `;
-
+      if (matched.length === 0) return alert('無符合條件題目');
+      const selected = [...matched].sort(() => Math.random() - 0.5).slice(0, 10);
       let lastPassage = '';
-      selected.forEach((q, idx) => {
+      document.getElementById('printableSheet').innerHTML = selected.map((q, idx) => {
+        let pHtml = '';
         if (q.passage && q.passage !== lastPassage) {
-          testHtml += `
-            <div class="p-4 bg-slate-50 border border-slate-300 rounded-lg text-sm leading-relaxed whitespace-pre-line">
-              <strong>【閱讀文章】</strong><br>${q.passage}
-              ${q.wordBank ? `<div class="mt-2 pt-2 border-t border-slate-300"><strong>單字庫：</strong>${q.wordBank}</div>` : ''}
-            </div>
-          `;
+          pHtml = `<div class="p-4 bg-slate-50 border rounded-lg mb-3 text-sm whitespace-pre-line"><strong>【閱讀文章】</strong><br>${q.passage}</div>`;
           lastPassage = q.passage;
         }
-        testHtml += `
-          <div class="space-y-1.5">
-            <p class="font-bold text-base">(&nbsp;&nbsp;&nbsp;&nbsp;) ${idx + 1}. ${q.question}</p>
-            <div class="grid grid-cols-2 gap-2 pl-6 text-sm">
-              ${['A','B','C','D'].filter(k => q.options[k]).map(k => `<div>(${k}) ${q.options[k]}</div>`).join('')}
-            </div>
-          </div>
-        `;
-      });
-
-      testHtml += `</div>`;
-
-      let answerHtml = `
-        <div class="print-break pt-8 mt-8 border-t-2 border-dashed border-slate-400">
-          <h2 class="text-xl font-bold text-emerald-900 mb-4">✅ 教師用解答與詳細解析</h2>
-          <div class="space-y-3 text-sm">
-            ${selected.map((q, idx) => `
-              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <p class="font-bold">第 ${idx + 1} 題：正確答案 (${q.answer}) ${q.options[q.answer] || ''}</p>
-                <p class="text-slate-600 mt-1">解析：${q.explanation}</p>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-
-      document.getElementById('printableSheet').innerHTML = testHtml + answerHtml;
+        return `${pHtml}<div class="mb-4"><p class="font-bold">${idx + 1}. ${q.question}</p></div>`;
+      }).join('');
       switchView('print');
     }
 
     function switchView(viewName) {
-      ['setup', 'quiz', 'summary', 'wrong', 'print', 'admin'].forEach(v => {
-        const el = document.getElementById(`view-${v}`);
-        if (el) el.classList.add('hidden');
-      });
-      const target = document.getElementById(`view-${viewName}`);
-      if (target) target.classList.remove('hidden');
+      ['setup', 'quiz', 'summary', 'wrong', 'print', 'admin'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
       if (viewName === 'wrong') renderWrongList();
     }
 
@@ -1079,21 +872,13 @@
       document.getElementById('vocabCountBadge').textContent = myVocabList.length;
     }
 
-    function openAdminModal() {
-      document.getElementById('adminSheetIdInput').value = config.sheetId;
-      document.getElementById('adminSheet1Name').value = config.sheet1;
-      document.getElementById('adminSheet2Name').value = config.sheet2;
-      document.getElementById('adminModal').classList.remove('hidden');
-    }
-
+    function openAdminModal() { document.getElementById('adminModal').classList.remove('hidden'); }
     function saveAdminSettings() {
       config.sheetId = document.getElementById('adminSheetIdInput').value.trim();
       config.sheet1 = document.getElementById('adminSheet1Name').value.trim() || '單字文法題庫';
       config.sheet2 = document.getElementById('adminSheet2Name').value.trim() || 'Reading';
       localStorage.setItem('yh_sheet_id', config.sheetId);
-      localStorage.setItem('yh_sheet1_name', config.sheet1);
-      localStorage.setItem('yh_sheet2_name', config.sheet2);
-      document.getElementById('adminModal').classList.add('hidden');
+      localStorage.setItem('yh_adminModal').classList.add('hidden');
       fetchAllSheets();
     }
   </script>

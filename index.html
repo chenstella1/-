@@ -3,11 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>優華數位英文學習刷題網</title>
+  <title>優華數位英文學習文法與閱讀刷題網</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;600;700&display=swap');
     body { font-family: 'Inter', 'Noto Sans TC', sans-serif; background-color: #f0fdf4; }
+    .clickable-word {
+      cursor: pointer;
+      border-bottom: 1px dashed #6ee7b7;
+      border-radius: 3px;
+      padding: 0 2px;
+      transition: all 0.15s ease;
+    }
+    .clickable-word:hover {
+      background-color: #d1fae5;
+      color: #065f46;
+      border-bottom-color: #059669;
+    }
     @media print {
       .no-print { display: none !important; }
       body { background-color: #ffffff; }
@@ -23,12 +35,12 @@
       <div class="text-center mb-6">
         <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 text-2xl font-bold mb-3">📚</div>
         <h1 class="text-2xl font-bold text-emerald-900">優華數位英文學習刷題網</h1>
-        <p class="text-sm text-slate-500 mt-1">學生請用 Email 登入，密碼請洽老師</p>
+        <p class="text-sm text-slate-500 mt-1">請輸入您的 Email 與老師提供的通行密碼</p>
       </div>
       <form id="loginForm" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Email 帳號</label>
-          <input type="email" id="loginEmail" required placeholder="student@gmail.com"
+          <label class="block text-sm font-medium text-slate-700 mb-1">學生 / 老師 Email</label>
+          <input type="email" id="loginEmail" required placeholder="example@gmail.com"
             class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none" />
         </div>
         <div>
@@ -57,9 +69,13 @@
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button onclick="switchView('setup')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm font-medium transition">🏠 首頁</button>
+        <button onclick="openVocabModal()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-sm shadow transition flex items-center gap-1">
+          📖 我的單字庫 <span id="vocabCountBadge" class="bg-white text-amber-800 px-1.5 py-0.5 rounded-full text-xs">0</span>
+        </button>
         <button onclick="switchView('wrong')" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-sm font-medium transition flex items-center gap-1">
           ❌ 錯題本 <span id="wrongCountBadge" class="bg-white text-rose-700 px-1.5 py-0.5 rounded-full text-xs">0</span>
         </button>
+        <button id="adminBtn" onclick="openAdminModal()" class="hidden px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm font-medium transition">⚙️ 題庫設定</button>
         <button onclick="logout()" class="px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-xs text-emerald-200 transition">登出</button>
       </div>
     </div>
@@ -75,9 +91,9 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
-        <span id="loadingText" class="text-sm font-medium">正在載入雲端 Google 試算表題庫...</span>
+        <span id="loadingText" class="text-sm font-medium">正在同步「單字文法題庫」與「Reading」雙工作表...</span>
       </div>
-      <button onclick="fetchQuestions()" class="text-xs underline hover:text-emerald-950">重新整理</button>
+      <button onclick="fetchAllSheets()" class="text-xs underline hover:text-emerald-950">重新載入</button>
     </div>
 
     <!-- 管理者後台專用介面 -->
@@ -152,10 +168,26 @@
     <!-- 2. 線上測驗畫面 -->
     <section id="view-quiz" class="hidden space-y-6">
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-emerald-100 flex flex-wrap items-center justify-between gap-3 no-print">
-        <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg text-sm" id="quizProgressText">第 1 / 10 題</span>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-lg text-sm" id="quizProgressText">第 1 / 10 題</span>
+          <span class="text-xs text-slate-500">💡 提示：點擊題目或文章中任何不懂的英文單字，可立即查中文與聽發音！</span>
+        </div>
         <div class="flex items-center gap-2">
           <span class="text-sm font-bold text-emerald-700" id="quizScoreText">得分：0</span>
           <button onclick="finishQuizEarly()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg">交卷看總結</button>
+        </div>
+      </div>
+
+      <!-- 閱讀文章與單字庫區塊（僅 Reading 閱讀類題目顯示） -->
+      <div id="readingPassageBox" class="hidden bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-amber-200 pb-2">
+          <span class="font-bold text-amber-900 text-base">📖 閱讀文章內文</span>
+          <span id="readingUnitTag" class="text-xs bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-medium"></span>
+        </div>
+        <div id="readingPassageContent" class="text-slate-800 leading-relaxed text-base whitespace-pre-line"></div>
+        <div id="wordBankBox" class="hidden bg-white p-4 rounded-xl border border-amber-300">
+          <p class="text-xs font-bold text-amber-800 mb-2">🔤 單字選填庫（點擊單字可查詢意思）：</p>
+          <div id="wordBankList" class="flex flex-wrap gap-2"></div>
         </div>
       </div>
 
@@ -243,16 +275,98 @@
 
   </main>
 
+  <!-- 即點即查單字彈出小字卡 -->
+  <div id="wordLookupModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-50 hidden flex items-center justify-center p-4" onclick="closeWordModal(event)">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-emerald-200 space-y-4" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 id="lookupWordTitle" class="text-2xl font-bold text-emerald-900">word</h3>
+            <button onclick="speakWord(currentLookupWord)" class="p-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition" title="聽發音">🔊</button>
+          </div>
+          <p id="lookupPhonetic" class="text-xs text-slate-400 font-mono mt-0.5"></p>
+        </div>
+        <button onclick="closeWordModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-100 space-y-1.5">
+        <p class="text-xs font-bold text-emerald-700">中文解釋與詞性：</p>
+        <p id="lookupMeaning" class="text-base font-bold text-slate-800">查詢中...</p>
+        <p id="lookupEngDef" class="text-xs text-slate-500 italic"></p>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button id="addToVocabBtn" onclick="saveCurrentWordToVocab()"
+          class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow transition text-sm">
+          ➕ 加入單字庫
+        </button>
+        <button onclick="closeWordModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 我的單字庫 Modal -->
+  <div id="vocabModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" onclick="closeVocabModal(event)">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-amber-200" onclick="event.stopPropagation()">
+      <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold text-amber-900">📖 我的個人單字庫</h3>
+          <p class="text-xs text-slate-500">點擊閱讀文章或題目中的單字即可隨時收錄至此</p>
+        </div>
+        <button onclick="closeVocabModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">✕</button>
+      </div>
+      <div id="vocabListContainer" class="p-5 overflow-y-auto flex-1 space-y-3"></div>
+      <div class="p-4 border-t border-slate-200 flex justify-between items-center bg-slate-50 rounded-b-2xl">
+        <button onclick="exportVocabCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">📥 匯出單字表 (CSV)</button>
+        <button onclick="closeVocabModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl">關閉視窗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理員題庫設定 Modal -->
+  <div id="adminModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+      <h3 class="text-lg font-bold text-slate-900">⚙️ Google Sheet 題庫串接設定</h3>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">Google 試算表 ID</label>
+        <input type="text" id="adminSheetIdInput" class="w-full px-3 py-2 border rounded-xl text-sm font-mono" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">工作表 1 名稱</label>
+          <input type="text" id="adminSheet1Name" class="w-full px-3 py-2 border rounded-xl text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">工作表 2 名稱</label>
+          <input type="text" id="adminSheet2Name" class="w-full px-3 py-2 border rounded-xl text-sm" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 rounded-xl text-sm">取消</button>
+        <button onclick="saveAdminSettings()" class="px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl text-sm">儲存並重新載入</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const SPREADSHEET_ID = '11rFyQ1FLFflBAUzBoJGI2p8EChYSJWuje16DkZZdSWc';
+    const DEFAULT_SHEET_ID = '11rFyQ1FLFflBAUzBoJGI2p8EChYSJWuje16DkZZdSWc';
+    let config = {
+      sheetId: localStorage.getItem('yh_sheet_id') || DEFAULT_SHEET_ID,
+      sheet1: localStorage.getItem('yh_sheet1_name') || '單字文法題庫',
+      sheet2: localStorage.getItem('yh_sheet2_name') || 'Reading'
+    };
+
     let currentUser = localStorage.getItem('yh_user_email') || '';
     let allQuestions = [];
     let currentQuiz = [];
     let currentIndex = 0;
     let score = 0;
     let wrongQuestions = JSON.parse(localStorage.getItem('yh_wrong_questions') || '[]');
+    let myVocabList = JSON.parse(localStorage.getItem('yh_my_vocab') || '[]');
+    let wordCache = JSON.parse(localStorage.getItem('yh_word_cache') || '{}');
+    let currentLookupWord = '';
+    let currentLookupData = null;
     let sessionCorrectCount = 0;
-    let sessionTriedCount = 0;
     let sessionWrongList = [];
 
     // ================= 登入驗證 =================
@@ -272,8 +386,11 @@
     function initAppAfterLogin() {
       document.getElementById('loginModal').classList.add('hidden');
       document.getElementById('userBadge').textContent = `登入帳號：${currentUser}`;
+      if (currentUser === 'yhstella2@gmail.com') {
+        document.getElementById('adminBtn').classList.remove('hidden');
+      }
       updateBadges();
-      fetchQuestions();
+      fetchAllSheets();
 
       if (currentUser === 'yhstella2@gmail.com') {
         document.getElementById('view-setup').classList.add('hidden');
@@ -294,7 +411,7 @@
       initAppAfterLogin();
     }
 
-    // ================= 雲端資料同步 (localStorage模擬雲端) =================
+    // ================= 雲端數據同步模擬 =================
     function getCloudDB() {
       return JSON.parse(localStorage.getItem('yh_cloud_db') || '{}');
     }
@@ -322,7 +439,6 @@
         wrongDetails: wrongList
       });
 
-      // 只要當天累積答對 10 題以上，就打上星星
       db[currentUser].calendar[todayStr] = {
         correct: totalCorrectToday,
         starred: totalCorrectToday >= 10
@@ -331,21 +447,28 @@
       saveCloudDB(db);
     }
 
-    // ================= 讀取 Google Sheet 題庫 =================
-    async function fetchQuestions() {
+    // ================= 雙工作表讀取 (單字文法題庫 & Reading) =================
+    async function fetchGoogleSheetJSON(sheetName) {
+      const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
+      const res = await fetch(url);
+      const text = await res.text();
+      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+      return JSON.parse(jsonStr);
+    }
+
+    async function fetchAllSheets() {
       const banner = document.getElementById('loadingBanner');
+      const loadingText = document.getElementById('loadingText');
       banner.classList.remove('hidden');
+      loadingText.textContent = `正在同步「${config.sheet1}」與「${config.sheet2}」...`;
 
-      const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+      let combined = [];
+
+      // 1. 讀取工作表 1：單字文法題庫 (A:年級, B:類別, C:單元, D:題目, E~H:選項A-D, I:答案, J:解析)
       try {
-        const res = await fetch(url);
-        const text = await res.text();
-        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-        const data = JSON.parse(jsonStr);
-        const rows = data.table.rows || [];
-
-        let parsed = [];
-        rows.forEach((r, idx) => {
+        const data1 = await fetchGoogleSheetJSON(config.sheet1);
+        const rows1 = data1.table.rows || [];
+        rows1.forEach((r, idx) => {
           const c = r.c || [];
           const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
           const grade = val(0);
@@ -354,33 +477,63 @@
           const question = val(3);
           if (!grade || !question || grade === '年級') return;
 
-          parsed.push({
-            id: `q_${idx}`,
+          combined.push({
+            id: `s1_${idx}`,
+            sourceSheet: 1,
             grade,
             category: category || '一般練習',
             unit: unit || '綜合單元',
+            passage: '',
+            wordBank: '',
             question,
-            options: {
-              A: val(4),
-              B: val(5),
-              C: val(6),
-              D: val(7)  // 修正：選項 D 對應 H 欄 (index 7)
-            },
-            answer: val(8).toUpperCase(),   // 修正：答案對應 I 欄 (index 8)
-            explanation: val(9) || '無詳細解析' // 修正：解析對應 J 欄 (index 9)
+            options: { A: val(4), B: val(5), C: val(6), D: val(7) },
+            answer: val(8).toUpperCase(),
+            explanation: val(9) || '無詳細解析'
           });
         });
-
-        allQuestions = parsed;
-        banner.classList.add('hidden');
-        renderFilterCheckboxes();
       } catch (err) {
-        console.error('題庫載入失敗:', err);
-        document.getElementById('loadingText').textContent = '❌ 載入失敗，請確認 Google Sheet 共用權限為「知道連結的任何人皆可檢視」。';
+        console.warn('工作表 1 讀取異常:', err);
       }
+
+      // 2. 讀取工作表 2：Reading (A:年級, B:類別, C:單元, D:文章, E:單字庫, F:子題目, G~J:選項A-D, K:答案, L:解析)
+      try {
+        const data2 = await fetchGoogleSheetJSON(config.sheet2);
+        const rows2 = data2.table.rows || [];
+        rows2.forEach((r, idx) => {
+          const c = r.c || [];
+          const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
+          const grade = val(0);
+          const category = val(1);
+          const unit = val(2);
+          const passage = val(3);
+          const wordBank = val(4);
+          const question = val(5);
+          if (!grade || !question || grade === '年級') return;
+
+          combined.push({
+            id: `s2_${idx}`,
+            sourceSheet: 2,
+            grade,
+            category: category || '閱讀測驗',
+            unit: unit || '閱讀練習',
+            passage,
+            wordBank,
+            question,
+            options: { A: val(6), B: val(7), C: val(8), D: val(9) },
+            answer: val(10).toUpperCase(),
+            explanation: val(11) || '無詳細解析'
+          });
+        });
+      } catch (err) {
+        console.warn('工作表 2 讀取異常:', err);
+      }
+
+      allQuestions = combined;
+      banner.classList.add('hidden');
+      renderFilterCheckboxes();
     }
 
-    // ================= 動態渲染複選選單 =================
+    // ================= 動態選單渲染 =================
     function renderFilterCheckboxes() {
       const grades = {};
       const categories = {};
@@ -402,8 +555,9 @@
       const container = document.getElementById(containerId);
       container.innerHTML = '';
       Object.entries(countMap).forEach(([label, count]) => {
+        const isReading = groupName === 'category' && (label.includes('閱讀') || label.includes('選填') || label.includes('素養'));
         const item = document.createElement('label');
-        item.className = 'flex items-center justify-between p-2.5 border border-slate-200 rounded-xl cursor-pointer hover:bg-emerald-50 transition text-sm';
+        item.className = `flex items-center justify-between p-2.5 border rounded-xl cursor-pointer transition text-sm ${isReading ? 'border-amber-300 bg-amber-50/50 hover:bg-amber-100/60' : 'border-slate-200 hover:bg-emerald-50'}`;
         item.innerHTML = `
           <div class="flex items-center gap-2 truncate">
             <input type="checkbox" name="${groupName}" value="${label}" onchange="updateMatchedCount()"
@@ -441,6 +595,165 @@
       document.getElementById('matchedCountHint').textContent = `符合條件共 ${matched.length} 題`;
     }
 
+    // ================= 點擊單字即查 + 語音 + 單字庫 =================
+    function makeWordsClickable(text) {
+      if (!text) return '';
+      return text.replace(/([A-Za-z]{2,}(?:['-][A-Za-z]+)*)/g, (match) => {
+        const cleanWord = match.replace(/[^A-Za-z'-]/g, '');
+        return `<span class="clickable-word" onclick="lookupWord('${cleanWord}', event)">${match}</span>`;
+      });
+    }
+
+    async function lookupWord(word, event) {
+      if (event) event.stopPropagation();
+      const target = word.toLowerCase();
+      currentLookupWord = word;
+
+      const modal = document.getElementById('wordLookupModal');
+      document.getElementById('lookupWordTitle').textContent = word;
+      document.getElementById('lookupPhonetic').textContent = '載入音標中...';
+      document.getElementById('lookupMeaning').textContent = '正在查詢中文解釋...';
+      document.getElementById('lookupEngDef').textContent = '';
+
+      const addBtn = document.getElementById('addToVocabBtn');
+      const alreadyExists = myVocabList.some(v => v.word.toLowerCase() === target);
+      addBtn.textContent = alreadyExists ? '✅ 已在單字庫中' : '➕ 加入單字庫';
+      addBtn.disabled = alreadyExists;
+      addBtn.className = alreadyExists
+        ? 'flex-1 py-2.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl text-sm cursor-default'
+        : 'flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow transition text-sm';
+
+      modal.classList.remove('hidden');
+      speakWord(word);
+
+      if (wordCache[target]) {
+        renderLookupResult(wordCache[target]);
+        return;
+      }
+
+      let phonetic = '', engDef = '', zhMeaning = '';
+      try {
+        const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(target)}`);
+        if (dictRes.ok) {
+          const dictJson = await dictRes.json();
+          const entry = dictJson[0];
+          phonetic = entry.phonetic || (entry.phonetics?.find(p => p.text)?.text) || '';
+          const firstMeaning = entry.meanings?.[0];
+          if (firstMeaning) {
+            const pos = firstMeaning.partOfSpeech ? `(${firstMeaning.partOfSpeech}) ` : '';
+            engDef = pos + (firstMeaning.definitions?.[0]?.definition || '');
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(target)}&langpair=en|zh-TW`);
+        if (transRes.ok) {
+          const transJson = await transRes.json();
+          zhMeaning = transJson.responseData?.translatedText || '查無中文釋義';
+        }
+      } catch (e) {
+        zhMeaning = '取得中文翻譯失敗';
+      }
+
+      const resultObj = { word, phonetic, zhMeaning, engDef };
+      wordCache[target] = resultObj;
+      localStorage.setItem('yh_word_cache', JSON.stringify(wordCache));
+      renderLookupResult(resultObj);
+    }
+
+    function renderLookupResult(data) {
+      currentLookupData = data;
+      document.getElementById('lookupPhonetic').textContent = data.phonetic || '/無音標資料/';
+      document.getElementById('lookupMeaning').textContent = data.zhMeaning;
+      document.getElementById('lookupEngDef').textContent = data.engDef;
+    }
+
+    function speakWord(word) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(word);
+      utter.lang = 'en-US';
+      utter.rate = 0.9;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function closeWordModal(e) {
+      if (!e || e.target.id === 'wordLookupModal') {
+        document.getElementById('wordLookupModal').classList.add('hidden');
+      }
+    }
+
+    function saveCurrentWordToVocab() {
+      if (!currentLookupData) return;
+      const exists = myVocabList.some(v => v.word.toLowerCase() === currentLookupData.word.toLowerCase());
+      if (!exists) {
+        const currentQ = currentQuiz[currentIndex];
+        myVocabList.unshift({
+          word: currentLookupData.word,
+          phonetic: currentLookupData.phonetic,
+          meaning: currentLookupData.zhMeaning,
+          source: currentQ ? `${currentQ.grade} - ${currentQ.unit}` : '自主查詢',
+          addedAt: new Date().toLocaleDateString()
+        });
+        localStorage.setItem('yh_my_vocab', JSON.stringify(myVocabList));
+        updateBadges();
+        const addBtn = document.getElementById('addToVocabBtn');
+        addBtn.textContent = '✅ 已加入單字庫';
+        addBtn.disabled = true;
+        addBtn.className = 'flex-1 py-2.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl text-sm';
+      }
+    }
+
+    function openVocabModal() {
+      const container = document.getElementById('vocabListContainer');
+      if (myVocabList.length === 0) {
+        container.innerHTML = `<div class="text-center py-10 text-slate-400">目前單字庫是空的喔！<br><span class="text-xs">在閱讀文章或題目時，點擊任何英文單字即可加入收藏。</span></div>`;
+      } else {
+        container.innerHTML = myVocabList.map((item, idx) => `
+          <div class="p-4 rounded-xl border border-slate-200 bg-amber-50/30 flex items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-lg text-emerald-900">${item.word}</span>
+                <span class="text-xs text-slate-400 font-mono">${item.phonetic || ''}</span>
+                <button onclick="speakWord('${item.word}')" class="text-sm bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-full">🔊</button>
+              </div>
+              <p class="text-sm font-medium text-slate-700 mt-1">${item.meaning}</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">出處：${item.source} ｜ 收錄日期：${item.addedAt}</p>
+            </div>
+            <button onclick="removeVocab(${idx})" class="text-xs text-rose-500 hover:underline px-2 py-1">移除</button>
+          </div>
+        `).join('');
+      }
+      document.getElementById('vocabModal').classList.remove('hidden');
+    }
+
+    function closeVocabModal(e) {
+      if (!e || e.target.id === 'vocabModal') {
+        document.getElementById('vocabModal').classList.add('hidden');
+      }
+    }
+
+    function removeVocab(idx) {
+      myVocabList.splice(idx, 1);
+      localStorage.setItem('yh_my_vocab', JSON.stringify(myVocabList));
+      updateBadges();
+      openVocabModal();
+    }
+
+    function exportVocabCSV() {
+      if (myVocabList.length === 0) return alert('單字庫目前沒有單字可匯出！');
+      const bom = '\uFEFF';
+      const rows = [['英文單字', '音標', '中文解釋', '出處', '收錄日期']];
+      myVocabList.forEach(v => rows.push([v.word, v.phonetic, v.meaning, v.source, v.addedAt]));
+      const csvContent = bom + rows.map(r => r.map(c => `"${(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `我的英文單字庫_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
     // ================= 線上測驗模式 =================
     function startQuizMode() {
       const matched = getFilteredQuestions();
@@ -451,7 +764,6 @@
       currentIndex = 0;
       score = 0;
       sessionCorrectCount = 0;
-      sessionTriedCount = 0;
       sessionWrongList = [];
 
       switchView('quiz');
@@ -465,7 +777,28 @@
       document.getElementById('qGradeBadge').textContent = q.grade;
       document.getElementById('qCatBadge').textContent = q.category;
       document.getElementById('qUnitBadge').textContent = q.unit;
-      document.getElementById('questionText').textContent = q.question;
+
+      const passageBox = document.getElementById('readingPassageBox');
+      const wordBankBox = document.getElementById('wordBankBox');
+      if (q.sourceSheet === 2 && q.passage) {
+        passageBox.classList.remove('hidden');
+        document.getElementById('readingUnitTag').textContent = `${q.category} ｜ ${q.unit}`;
+        document.getElementById('readingPassageContent').innerHTML = makeWordsClickable(q.passage);
+
+        if (q.wordBank) {
+          wordBankBox.classList.remove('hidden');
+          const words = q.wordBank.split(/[,，]/).map(w => w.trim()).filter(Boolean);
+          document.getElementById('wordBankList').innerHTML = words.map(w =>
+            `<span class="px-3 py-1 bg-amber-100 text-amber-900 font-semibold rounded-lg text-sm border border-amber-300">${makeWordsClickable(w)}</span>`
+          ).join('');
+        } else {
+          wordBankBox.classList.add('hidden');
+        }
+      } else {
+        passageBox.classList.add('hidden');
+      }
+
+      document.getElementById('questionText').innerHTML = makeWordsClickable(q.question);
 
       const optContainer = document.getElementById('optionsContainer');
       optContainer.innerHTML = '';
@@ -477,7 +810,7 @@
         btn.onclick = () => handleAnswer(key);
         btn.innerHTML = `
           <span class="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 text-sm">${key}</span>
-          <span class="text-base text-slate-800 pt-0.5">${q.options[key]}</span>
+          <span class="text-base text-slate-800 pt-0.5">${makeWordsClickable(q.options[key])}</span>
         `;
         optContainer.appendChild(btn);
       });
@@ -489,7 +822,6 @@
     function handleAnswer(selectedKey) {
       const q = currentQuiz[currentIndex];
       const isCorrect = selectedKey === q.answer;
-      sessionTriedCount++;
 
       ['A', 'B', 'C', 'D'].forEach(k => {
         const btn = document.getElementById(`optBtn_${k}`);
@@ -524,7 +856,7 @@
       }
 
       document.getElementById('feedbackAnswer').textContent = `正確答案：(${q.answer}) ${q.options[q.answer] || ''}`;
-      document.getElementById('feedbackExplanation').textContent = q.explanation;
+      document.getElementById('feedbackExplanation').innerHTML = makeWordsClickable(q.explanation);
 
       const nextBtn = document.getElementById('nextQuestionBtn');
       nextBtn.classList.remove('hidden');
@@ -555,7 +887,7 @@
       document.getElementById('sumScore').textContent = score;
     }
 
-    // ================= 月曆打卡與星星 (答對10題以上) =================
+    // ================= 月曆打卡 =================
     function renderCalendar() {
       const grid = document.getElementById('calendarGrid');
       const title = document.getElementById('calendarMonthTitle');
@@ -590,7 +922,7 @@
       }
     }
 
-    // ================= 管理者後台介面 =================
+    // ================= 管理員後台 =================
     function loadAdminData() {
       const container = document.getElementById('adminStudentList');
       const db = getCloudDB();
@@ -606,40 +938,21 @@
         const sessions = data.sessions || [];
         const totalCorrect = sessions.reduce((acc, s) => acc + s.correct, 0);
         const totalWrong = sessions.reduce((acc, s) => acc + s.wrong, 0);
-        const totalCount = totalCorrect + totalWrong;
 
         return `
           <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <span class="font-bold text-base text-emerald-900">${email}</span>
-                <span class="ml-2 text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">總刷題：${totalCount} 題</span>
-                <span class="ml-1 text-xs bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full">答對：${totalCorrect}</span>
-                <span class="ml-1 text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">答錯：${totalWrong}</span>
-              </div>
+            <div>
+              <span class="font-bold text-base text-emerald-900">${email}</span>
+              <span class="ml-2 text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">答對：${totalCorrect}</span>
+              <span class="ml-1 text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">答錯：${totalWrong}</span>
             </div>
             <div class="space-y-2 pt-2 border-t border-slate-200">
-              <p class="text-xs font-bold text-slate-600">最近練習紀錄：</p>
-              ${sessions.map((s, sIdx) => `
-                <div class="p-3 bg-white rounded-lg border border-slate-200 text-sm space-y-2">
+              ${sessions.map((s) => `
+                <div class="p-3 bg-white rounded-lg border border-slate-200 text-sm space-y-1">
                   <div class="flex justify-between items-center">
-                    <span class="font-medium text-slate-800">📅 ${s.date} ｜ 練習單元：<strong class="text-emerald-700">${s.unit}</strong></span>
-                    <span class="text-xs text-slate-500">答對 ${s.correct} 題 / 答錯 ${s.wrong} 題</span>
+                    <span class="font-medium text-slate-800">📅 ${s.date} ｜ <strong>${s.unit}</strong></span>
+                    <span class="text-xs text-slate-500">答對 ${s.correct} / 答錯 ${s.wrong}</span>
                   </div>
-                  ${s.wrongDetails && s.wrongDetails.length > 0 ? `
-                    <details class="text-xs">
-                      <summary class="cursor-pointer font-bold text-rose-600 hover:underline">👁️ 點開查看該次錯題與解析 (${s.wrongDetails.length} 題)</summary>
-                      <div class="mt-2 space-y-2 pl-3 border-l-2 border-rose-300">
-                        ${s.wrongDetails.map((w, wIdx) => `
-                          <div class="p-2 bg-rose-50/60 rounded-md">
-                            <p class="font-bold text-slate-900">${wIdx + 1}. ${w.question}</p>
-                            <p class="text-rose-700">你的選擇：(${w.userChoice}) ${w.options[w.userChoice] || ''} ｜ 正確答案：(${w.answer}) ${w.options[w.answer] || ''}</p>
-                            <p class="text-slate-600 mt-0.5">解析：${w.explanation}</p>
-                          </div>
-                        `).join('')}
-                      </div>
-                    </details>
-                  ` : '<p class="text-xs text-emerald-600 font-medium">✨ 該次練習全數答對，無錯題！</p>'}
                 </div>
               `).join('')}
             </div>
@@ -648,7 +961,7 @@
       }).join('');
     }
 
-    // ================= 錯題本管理 =================
+    // ================= 錯題本 =================
     function addWrongQuestion(q, userChoice) {
       if (!wrongQuestions.some(item => item.id === q.id)) {
         wrongQuestions.unshift({ ...q, userChoice, wrongDate: new Date().toLocaleDateString() });
@@ -669,6 +982,7 @@
             <span class="text-xs font-bold px-2.5 py-1 bg-rose-100 text-rose-800 rounded-lg">${q.grade} ｜ ${q.category} ｜ ${q.unit}</span>
             <span class="text-xs text-slate-400">記錄日期：${q.wrongDate}</span>
           </div>
+          ${q.passage ? `<div class="p-3 bg-amber-50 rounded-xl text-sm text-slate-700 whitespace-pre-line">${q.passage}</div>` : ''}
           <p class="font-bold text-slate-900">${i + 1}. ${q.question}</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             ${['A','B','C','D'].filter(k => q.options[k]).map(k => `
@@ -691,7 +1005,7 @@
       }
     }
 
-    // ================= 生成可列印試卷及答案 (不顯示 C 欄學習類別) =================
+    // ================= 列印試卷 =================
     function startPrintMode() {
       const matched = getFilteredQuestions();
       if (matched.length === 0) return alert('沒有符合條件的題目，請先勾選年級或類別！');
@@ -709,7 +1023,17 @@
         <div class="space-y-6">
       `;
 
+      let lastPassage = '';
       selected.forEach((q, idx) => {
+        if (q.passage && q.passage !== lastPassage) {
+          testHtml += `
+            <div class="p-4 bg-slate-50 border border-slate-300 rounded-lg text-sm leading-relaxed whitespace-pre-line">
+              <strong>【閱讀文章】</strong><br>${q.passage}
+              ${q.wordBank ? `<div class="mt-2 pt-2 border-t border-slate-300"><strong>單字庫：</strong>${q.wordBank}</div>` : ''}
+            </div>
+          `;
+          lastPassage = q.passage;
+        }
         testHtml += `
           <div class="space-y-1.5">
             <p class="font-bold text-base">(&nbsp;&nbsp;&nbsp;&nbsp;) ${idx + 1}. ${q.question}</p>
@@ -740,7 +1064,6 @@
       switchView('print');
     }
 
-    // ================= 畫面切換與通用函式 =================
     function switchView(viewName) {
       ['setup', 'quiz', 'summary', 'wrong', 'print', 'admin'].forEach(v => {
         const el = document.getElementById(`view-${v}`);
@@ -753,6 +1076,25 @@
 
     function updateBadges() {
       document.getElementById('wrongCountBadge').textContent = wrongQuestions.length;
+      document.getElementById('vocabCountBadge').textContent = myVocabList.length;
+    }
+
+    function openAdminModal() {
+      document.getElementById('adminSheetIdInput').value = config.sheetId;
+      document.getElementById('adminSheet1Name').value = config.sheet1;
+      document.getElementById('adminSheet2Name').value = config.sheet2;
+      document.getElementById('adminModal').classList.remove('hidden');
+    }
+
+    function saveAdminSettings() {
+      config.sheetId = document.getElementById('adminSheetIdInput').value.trim();
+      config.sheet1 = document.getElementById('adminSheet1Name').value.trim() || '單字文法題庫';
+      config.sheet2 = document.getElementById('adminSheet2Name').value.trim() || 'Reading';
+      localStorage.setItem('yh_sheet_id', config.sheetId);
+      localStorage.setItem('yh_sheet1_name', config.sheet1);
+      localStorage.setItem('yh_sheet2_name', config.sheet2);
+      document.getElementById('adminModal').classList.add('hidden');
+      fetchAllSheets();
     }
   </script>
 </body>

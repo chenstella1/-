@@ -91,7 +91,7 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
-        <span id="loadingText" class="text-sm font-medium">正在同步雙工作表題庫...</span>
+        <span id="loadingText" class="text-sm font-medium">正在同步「單字文法題庫」與「Reading」雙工作表...</span>
       </div>
       <button onclick="fetchAllSheets()" class="text-xs underline hover:text-emerald-950">重新載入</button>
     </div>
@@ -708,7 +708,6 @@
       document.getElementById('qCatBadge').textContent = q.category;
       document.getElementById('qUnitBadge').textContent = q.unit;
 
-      // 處理工作表 2 閱讀文章置頂
       const passageBox = document.getElementById('readingPassageBox');
       const wordBankBox = document.getElementById('wordBankBox');
       if (q.sourceSheet === 2 && q.passage) {
@@ -878,7 +877,7 @@
       config.sheet1 = document.getElementById('adminSheet1Name').value.trim() || '單字文法題庫';
       config.sheet2 = document.getElementById('adminSheet2Name').value.trim() || 'Reading';
       localStorage.setItem('yh_sheet_id', config.sheetId);
-      localStorage.setItem('yh_adminModal').classList.add('hidden');
+      document.getElementById('adminModal').classList.add('hidden');
       fetchAllSheets();
     }
   </script>

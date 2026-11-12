@@ -128,10 +128,14 @@
         <div id="gradeFilters" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5"></div>
       </div>
 
+      <!-- 學習類別篩選區塊（已新增 全選 / 清除 按鈕） -->
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-bold text-emerald-900">學習類別 / 題型（可複選多個）</h2>
-          <button onclick="toggleAllCheckboxes('category')" class="text-xs text-emerald-600 hover:underline">全選 / 取消全選</button>
+          <div class="flex items-center gap-3">
+            <button onclick="setAllCheckboxes('category', true)" class="text-xs text-emerald-700 font-bold hover:underline">☑️ 全選</button>
+            <button onclick="setAllCheckboxes('category', false)" class="text-xs text-rose-600 font-bold hover:underline">🗑️ 清除</button>
+          </div>
         </div>
         <div id="categoryFilters" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 mt-3"></div>
       </div>
@@ -177,7 +181,7 @@
         </div>
       </div>
 
-      <!-- 閱讀文章置頂區塊（若有填寫文章則自動顯示） -->
+      <!-- 閱讀文章置頂區塊 -->
       <div id="readingPassageBox" class="hidden bg-amber-50/80 border-2 border-amber-300 rounded-2xl p-6 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-amber-200 pb-2">
           <span id="readingTypeLabel" class="font-bold text-amber-900 text-base">📖 閱讀文章</span>
@@ -200,7 +204,6 @@
           <h3 id="questionTitleText" class="text-lg sm:text-xl font-bold text-slate-900 leading-relaxed"></h3>
         </div>
 
-        <!-- 動態選項容器（自動過濾空白選項，支援 2 ~ 10 個選項） -->
         <div id="optionsContainer" class="space-y-3"></div>
 
         <div id="feedbackBox" class="hidden p-5 rounded-xl border-l-4 space-y-2">
@@ -518,6 +521,13 @@
       updateMatchedCount();
     }
 
+    // 新增：精準控制特定群組全選 (checked = true) 或清除 (checked = false)
+    function setAllCheckboxes(name, checked) {
+      const boxes = document.querySelectorAll(`input[name="${name}"]`);
+      boxes.forEach(b => b.checked = checked);
+      updateMatchedCount();
+    }
+
     function getFilteredQuestions() {
       const selGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(b => b.value);
       const selCats = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(b => b.value);
@@ -708,7 +718,6 @@
 
       document.getElementById('questionTitleText').innerHTML = makeWordsClickable(q.question);
 
-      // 動態渲染選項：自動過濾空白選項（支援 optA 到 optJ）
       const optContainer = document.getElementById('optionsContainer');
       optContainer.innerHTML = '';
       Object.entries(q.options).forEach(([key, val]) => {

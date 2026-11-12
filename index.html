@@ -91,9 +91,9 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
-        <span id="loadingText" class="text-sm font-medium">正在同步「單字文法題庫」與「Reading」雙工作表...</span>
+        <span id="loadingText" class="text-sm font-medium">正在同步 Google 試算表題庫...</span>
       </div>
-      <button onclick="fetchAllSheets()" class="text-xs underline hover:text-emerald-950">重新載入</button>
+      <button onclick="fetchQuestions()" class="text-xs underline hover:text-emerald-950">重新載入</button>
     </div>
 
     <!-- 管理者後台專用介面 -->
@@ -130,7 +130,7 @@
 
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
         <div class="flex items-center justify-between mb-2">
-          <h2 class="text-lg font-bold text-emerald-900">學習類別（可複選多個）</h2>
+          <h2 class="text-lg font-bold text-emerald-900">學習類別 / 題型（可複選多個）</h2>
           <button onclick="toggleAllCheckboxes('category')" class="text-xs text-emerald-600 hover:underline">全選 / 取消全選</button>
         </div>
         <div id="categoryFilters" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 mt-3"></div>
@@ -177,15 +177,15 @@
         </div>
       </div>
 
-      <!-- 閱讀文章置頂區塊（僅工作表 2 閱讀/克漏字顯示） -->
+      <!-- 閱讀文章置頂區塊（若有填寫文章則自動顯示） -->
       <div id="readingPassageBox" class="hidden bg-amber-50/80 border-2 border-amber-300 rounded-2xl p-6 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-amber-200 pb-2">
-          <span class="font-bold text-amber-900 text-base">📖 閱讀文章 / 克漏字內文</span>
+          <span id="readingTypeLabel" class="font-bold text-amber-900 text-base">📖 閱讀文章</span>
           <span id="readingUnitTag" class="text-xs bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-medium"></span>
         </div>
         <div id="readingPassageContent" class="text-slate-800 leading-relaxed text-base whitespace-pre-line"></div>
         <div id="wordBankBox" class="hidden bg-white p-3 rounded-xl border border-amber-300">
-          <p class="text-xs font-bold text-amber-800 mb-1">🔤 單字庫：</p>
+          <p class="text-xs font-bold text-amber-800 mb-1">🔤 單字庫 / 備註：</p>
           <div id="wordBankList" class="flex flex-wrap gap-2"></div>
         </div>
       </div>
@@ -200,6 +200,7 @@
           <h3 id="questionTitleText" class="text-lg sm:text-xl font-bold text-slate-900 leading-relaxed"></h3>
         </div>
 
+        <!-- 動態選項容器（自動過濾空白選項，支援 2 ~ 10 個選項） -->
         <div id="optionsContainer" class="space-y-3"></div>
 
         <div id="feedbackBox" class="hidden p-5 rounded-xl border-l-4 space-y-2">
@@ -322,15 +323,9 @@
         <label class="block text-xs font-bold text-slate-600 mb-1">Google 試算表 ID</label>
         <input type="text" id="adminSheetIdInput" class="w-full px-3 py-2 border rounded-xl text-sm font-mono" />
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">工作表 1 名稱</label>
-          <input type="text" id="adminSheet1Name" class="w-full px-3 py-2 border rounded-xl text-sm" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">工作表 2 名稱</label>
-          <input type="text" id="adminSheet2Name" class="w-full px-3 py-2 border rounded-xl text-sm" />
-        </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">工作表名稱 (Sheet Name)</label>
+        <input type="text" id="adminSheetNameInput" class="w-full px-3 py-2 border rounded-xl text-sm" />
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="document.getElementById('adminModal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 rounded-xl text-sm">取消</button>
@@ -343,8 +338,7 @@
     const DEFAULT_SHEET_ID = '11rFyQ1FLFflBAUzBoJGI2p8EChYSJWuje16DkZZdSWc';
     let config = {
       sheetId: localStorage.getItem('yh_sheet_id') || DEFAULT_SHEET_ID,
-      sheet1: localStorage.getItem('yh_sheet1_name') || '單字文法題庫',
-      sheet2: localStorage.getItem('yh_sheet2_name') || 'Reading'
+      sheetName: localStorage.getItem('yh_sheet_name') || '工作表1'
     };
 
     let currentUser = localStorage.getItem('yh_user_email') || '';
@@ -380,7 +374,7 @@
         document.getElementById('adminBtn').classList.remove('hidden');
       }
       updateBadges();
-      fetchAllSheets();
+      fetchQuestions();
 
       if (currentUser === 'yhstella2@gmail.com') {
         document.getElementById('view-setup').classList.add('hidden');
@@ -425,83 +419,65 @@
       saveCloudDB(db);
     }
 
-    async function fetchGoogleSheetJSON(sheetName) {
-      const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
-      const res = await fetch(url);
-      const text = await res.text();
-      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-      return JSON.parse(jsonStr);
-    }
-
-    async function fetchAllSheets() {
+    async function fetchQuestions() {
       const banner = document.getElementById('loadingBanner');
       const loadingText = document.getElementById('loadingText');
       banner.classList.remove('hidden');
-      loadingText.textContent = `正在同步「${config.sheet1}」與「${config.sheet2}」...`;
+      loadingText.textContent = `正在同步「${config.sheetName}」題庫...`;
 
-      let combined = [];
-
-      // 1. 讀取工作表 1：單字文法題庫 (A:年級, B:類別, C:單元, D:題目, E~H:選項A-D, I:答案, J:解析)
+      const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?sheet=${encodeURIComponent(config.sheetName)}&tqx=out:json`;
       try {
-        const data1 = await fetchGoogleSheetJSON(config.sheet1);
-        const rows1 = data1.table.rows || [];
-        rows1.forEach((r, idx) => {
+        const res = await fetch(url);
+        const text = await res.text();
+        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const data = JSON.parse(jsonStr);
+        const rows = data.table.rows || [];
+
+        let parsed = [];
+        rows.forEach((r, idx) => {
           const c = r.c || [];
           const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
-          const grade = val(0), category = val(1), unit = val(2), question = val(3);
-          if (!grade || !question || grade === '年級') return;
+          
+          const grade = val(0);    // grade
+          const unit = val(1);     // unit
+          const type = val(2);     // type (學習類別/題型)
+          const question = val(3); // question (題目或文章內文)
+          const wordBank = val(4); // 單字庫 / 備註
 
-          combined.push({
-            id: `s1_${idx}`,
-            sourceSheet: 1,
+          if (!grade || !question || grade === 'grade') return;
+
+          // 動態抓取 optA 到 optJ (index 5 到 14) 作為選項
+          let options = {};
+          const optionKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+          optionKeys.forEach((key, i) => {
+            const optVal = val(5 + i);
+            if (optVal) options[key] = optVal;
+          });
+
+          const answer = val(15).toUpperCase();  // answer (index 15)
+          const explanation = val(16) || '無詳細解析'; // explanation (index 16)
+
+          parsed.push({
+            id: `q_${idx}`,
             grade,
-            category: category || '一般練習',
             unit: unit || '綜合單元',
-            passage: '',
-            wordBank: '',
-            questionNum: '',
-            question,
-            options: { A: val(4), B: val(5), C: val(6), D: val(7) },
-            answer: val(8).toUpperCase(),
-            explanation: val(9) || '無詳細解析'
-          });
-        });
-      } catch (err) {
-        console.warn('工作表 1 讀取異常:', err);
-      }
-
-      // 2. 讀取工作表 2：Reading (A:年級, B:類別, C:單元, D:文章, E:單字庫, F:第幾格/題號, G~J:選項A-D, K:答案, L:解析)
-      try {
-        const data2 = await fetchGoogleSheetJSON(config.sheet2);
-        const rows2 = data2.table.rows || [];
-        rows2.forEach((r, idx) => {
-          const c = r.c || [];
-          const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
-          const grade = val(0), category = val(1), unit = val(2), passage = val(3), wordBank = val(4), qNum = val(5);
-          if (!grade || !passage || grade === '年級') return;
-
-          combined.push({
-            id: `s2_${idx}`,
-            sourceSheet: 2,
-            grade,
-            category: category || '閱讀測驗',
-            unit: unit || '閱讀練習',
-            passage,
+            category: type || '綜合練習',
+            passage: (type.includes('閱讀') || type.includes('克漏字') || type.includes('選填')) ? question : '',
+            question: (type.includes('閱讀') || type.includes('克漏字') || type.includes('選填')) ? `請根據文章回答問題：` : question,
             wordBank,
-            questionNum: qNum || String(idx + 1),
-            question: `請選出空格 [${qNum || (idx + 1)}] 的最適選項：`,
-            options: { A: val(6), B: val(7), C: val(8), D: val(9) },
-            answer: val(10).toUpperCase(),
-            explanation: val(11) || '無詳細解析'
+            options,
+            answer,
+            explanation
           });
         });
-      } catch (err) {
-        console.warn('工作表 2 讀取異常:', err);
-      }
 
-      allQuestions = combined;
-      banner.classList.add('hidden');
-      renderFilterCheckboxes();
+        allQuestions = parsed;
+        banner.classList.add('hidden');
+        renderFilterCheckboxes();
+      } catch (err) {
+        console.error('題庫載入失敗:', err);
+        loadingText.textContent = '❌ 載入失敗，請確認 Google 試算表 ID 正確且已設為公開共用。';
+      }
     }
 
     function renderFilterCheckboxes() {
@@ -522,9 +498,8 @@
       const container = document.getElementById(containerId);
       container.innerHTML = '';
       Object.entries(countMap).forEach(([label, count]) => {
-        const isReading = groupName === 'category' && (label.includes('閱讀') || label.includes('克漏字') || label.includes('選填') || label.includes('素養'));
         const item = document.createElement('label');
-        item.className = `flex items-center justify-between p-2.5 border rounded-xl cursor-pointer transition text-sm ${isReading ? 'border-amber-300 bg-amber-50/50 hover:bg-amber-100/60' : 'border-slate-200 hover:bg-emerald-50'}`;
+        item.className = 'flex items-center justify-between p-2.5 border rounded-xl cursor-pointer hover:bg-emerald-50 transition text-sm border-slate-200';
         item.innerHTML = `
           <div class="flex items-center gap-2 truncate">
             <input type="checkbox" name="${groupName}" value="${label}" onchange="updateMatchedCount()" class="w-4 h-4 accent-emerald-600 rounded" />
@@ -710,9 +685,12 @@
 
       const passageBox = document.getElementById('readingPassageBox');
       const wordBankBox = document.getElementById('wordBankBox');
-      if (q.sourceSheet === 2 && q.passage) {
+      const readingTypeLabel = document.getElementById('readingTypeLabel');
+
+      if (q.passage) {
         passageBox.classList.remove('hidden');
-        document.getElementById('readingUnitTag').textContent = `${q.category} ｜ ${q.unit}`;
+        readingTypeLabel.textContent = `📖 ${q.category}（文章內文）`;
+        document.getElementById('readingUnitTag').textContent = q.unit;
         document.getElementById('readingPassageContent').innerHTML = makeWordsClickable(q.passage);
 
         if (q.wordBank) {
@@ -730,15 +708,16 @@
 
       document.getElementById('questionTitleText').innerHTML = makeWordsClickable(q.question);
 
+      // 動態渲染選項：自動過濾空白選項（支援 optA 到 optJ）
       const optContainer = document.getElementById('optionsContainer');
       optContainer.innerHTML = '';
-      ['A', 'B', 'C', 'D'].forEach(key => {
-        if (!q.options[key]) return;
+      Object.entries(q.options).forEach(([key, val]) => {
+        if (!val) return;
         const btn = document.createElement('button');
         btn.id = `optBtn_${key}`;
         btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 transition flex items-start gap-3';
         btn.onclick = () => handleAnswer(key);
-        btn.innerHTML = `<span class="w-7 h-7 rounded-full bg-slate-100 font-bold flex items-center justify-center shrink-0 text-sm">${key}</span><span class="text-base text-slate-800 pt-0.5">${makeWordsClickable(q.options[key])}</span>`;
+        btn.innerHTML = `<span class="w-7 h-7 rounded-full bg-slate-100 font-bold flex items-center justify-center shrink-0 text-sm">${key}</span><span class="text-base text-slate-800 pt-0.5">${makeWordsClickable(val)}</span>`;
         optContainer.appendChild(btn);
       });
 
@@ -748,15 +727,19 @@
 
     function handleAnswer(selectedKey) {
       const q = currentQuiz[currentIndex];
-      const isCorrect = selectedKey === q.answer;
+      const isCorrect = String(selectedKey).toUpperCase() === String(q.answer).toUpperCase();
 
-      ['A', 'B', 'C', 'D'].forEach(k => {
+      Object.keys(q.options).forEach(k => {
         const btn = document.getElementById(`optBtn_${k}`);
         if (!btn) return;
         btn.onclick = null;
-        if (k === q.answer) btn.className = 'w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
-        else if (k === selectedKey && !isCorrect) btn.className = 'w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
-        else btn.className = 'w-full text-left p-4 rounded-xl border border-slate-200 opacity-60 flex items-start gap-3';
+        if (String(k).toUpperCase() === String(q.answer).toUpperCase()) {
+          btn.className = 'w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 flex items-start gap-3';
+        } else if (String(k).toUpperCase() === String(selectedKey).toUpperCase() && !isCorrect) {
+          btn.className = 'w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-50 flex items-start gap-3';
+        } else {
+          btn.className = 'w-full text-left p-4 rounded-xl border border-slate-200 opacity-60 flex items-start gap-3';
+        }
       });
 
       const fbBox = document.getElementById('feedbackBox');
@@ -871,14 +854,19 @@
       document.getElementById('vocabCountBadge').textContent = myVocabList.length;
     }
 
-    function openAdminModal() { document.getElementById('adminModal').classList.remove('hidden'); }
+    function openAdminModal() {
+      document.getElementById('adminSheetIdInput').value = config.sheetId;
+      document.getElementById('adminSheetNameInput').value = config.sheetName;
+      document.getElementById('adminModal').classList.remove('hidden');
+    }
+
     function saveAdminSettings() {
       config.sheetId = document.getElementById('adminSheetIdInput').value.trim();
-      config.sheet1 = document.getElementById('adminSheet1Name').value.trim() || '單字文法題庫';
-      config.sheet2 = document.getElementById('adminSheet2Name').value.trim() || 'Reading';
+      config.sheetName = document.getElementById('adminSheetNameInput').value.trim() || '工作表1';
       localStorage.setItem('yh_sheet_id', config.sheetId);
+      localStorage.setItem('yh_sheet_name', config.sheetName);
       document.getElementById('adminModal').classList.add('hidden');
-      fetchAllSheets();
+      fetchQuestions();
     }
   </script>
 </body>

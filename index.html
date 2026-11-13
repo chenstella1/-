@@ -86,9 +86,10 @@
         <button id="nav-home-btn" onclick="switchTab('quiz')" class="text-sm font-bold hover:underline">主頁測驗</button>
         <button onclick="switchTab('vocab-bank')" class="text-sm font-bold hover:underline">我的單字庫 <span id="vocab-count-badge" class="bg-amber-400 text-slate-900 px-1.5 py-0.2 rounded-full text-xs">0</span></button>
         
-        <!-- 學生專屬右上角訊息通知按鈕 -->
-        <button id="nav-msg-btn" onclick="openStudentMessages()" class="relative text-sm font-bold bg-amber-500 hover:bg-amber-600 px-3 py-1.5 rounded-xl transition-colors hidden">
-          📬 老師訊息 <span id="msg-count-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+        <!-- 右上角訊息箱按鈕 (學生與管理者皆可使用) -->
+        <button onclick="openMessagesModal()" class="relative text-sm font-bold bg-amber-500 hover:bg-amber-600 px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1.5">
+          <span>📬 訊息箱</span>
+          <span id="msg-count-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
         </button>
 
         <button onclick="logout()" class="text-sm text-brand-100 hover:text-white underline">登出</button>
@@ -103,7 +104,7 @@
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
         <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：依日期分類的學生練習紀錄 (最新在最上面)</h2>
-        <p class="text-sm text-slate-500 mb-6">可檢視各日期各學生的練習狀況、錯題明細，並可直接於平台上發送站內訊息給學生。</p>
+        <p class="text-sm text-slate-500 mb-6">可檢視各日期各學生的練習狀況、錯題明細，並可隨時刪除已看過的報告。</p>
         
         <div id="admin-records-container" class="space-y-6">
           <!-- 動態載入依日期分組的紀錄 -->
@@ -227,7 +228,7 @@
 
     </div>
 
-    <!-- 頁籤二：錯題區本 -->
+    <!-- 頁籤二 : 錯題區本 -->
     <div id="tab-wrong" class="hidden space-y-5">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
@@ -246,7 +247,7 @@
       <div id="wrong-list-container" class="space-y-5"></div>
     </div>
 
-    <!-- 頁籤三：個人單字庫 -->
+    <!-- 頁籤三 : 個人單字庫 -->
     <div id="tab-vocab-bank" class="hidden space-y-5">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
@@ -263,18 +264,38 @@
 
   </main>
 
-  <!-- 學生訊息彈出視窗 (Modal) -->
-  <div id="student-msg-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+  <!-- 雙向訊息箱彈出視窗 (Modal) -->
+  <div id="messages-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="text-xl font-bold text-slate-800">📬 來自老師的站內訊息</h3>
-        <button onclick="closeStudentMessages()" class="text-slate-400 hover:text-slate-600 font-bold text-lg px-2">✕</button>
+        <h3 id="modal-msg-title" class="text-xl font-bold text-slate-800">📬 平台訊息箱</h3>
+        <button onclick="closeMessagesModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg px-2">✕</button>
       </div>
-      <div id="student-msg-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
+
+      <!-- 若是管理者，需先選擇要對話的學生 -->
+      <div id="admin-target-selector" class="hidden space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-600">選擇對話學生</label>
+        <select id="msg-target-student-select" onchange="switchAdminChatTarget()" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white font-medium">
+          <!-- 動態載入學生選項 -->
+        </select>
+      </div>
+
+      <!-- 對話訊息列表 -->
+      <div id="chat-messages-list" class="space-y-3 max-h-72 overflow-y-auto pr-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
         <!-- 動態載入訊息 -->
       </div>
-      <div class="flex justify-end pt-2">
-        <button onclick="closeStudentMessages()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2.5 rounded-xl text-sm">關閉</button>
+
+      <!-- 發送訊息輸入區 -->
+      <div class="space-y-2 pt-2">
+        <textarea id="chat-input-text" rows="2" placeholder="輸入要傳送的訊息..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+        <div class="flex justify-end gap-2">
+          <button onclick="sendPlatformChatMessage()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow transition-colors">
+            🚀 傳送訊息
+          </button>
+          <button onclick="closeMessagesModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs">
+            關閉
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -313,10 +334,10 @@
     let wrongQuestions = [];
     let vocabBank = [];
     let userLogs = [];
-    let studentMessages = [];
     let currentCalendarDate = new Date();
     let activeSelectedWord = '';
     let activeWordDefinition = '';
+    let currentChatStudentEmail = '';
 
     window.onload = () => {
       const savedUser = localStorage.getItem('yh_user');
@@ -330,14 +351,13 @@
           document.getElementById('tab-quiz').classList.add('hidden');
           document.getElementById('wrong-btn-banner').classList.add('hidden');
           document.getElementById('nav-home-btn').innerText = '管理者後台';
-          document.getElementById('nav-msg-btn').classList.add('hidden');
           loadAdminDashboard();
         } else {
           loadUserData();
           renderCalendar();
           loadQuestions();
-          document.getElementById('nav-msg-btn').classList.remove('hidden');
         }
+        updateMsgBadge();
       }
     };
 
@@ -353,20 +373,35 @@
 
       const logKey = `yh_logs_${currentUser.email}`;
       userLogs = JSON.parse(localStorage.getItem(logKey) || '[]');
-
-      loadStudentMessages();
     }
 
-    function loadStudentMessages() {
-      if (!currentUser) return;
-      const allMsgs = JSON.parse(localStorage.getItem('yh_platform_messages') || '{}');
-      studentMessages = allMsgs[currentUser.email] || [];
+    // 平台雙向訊息系統
+    function getPlatformMessages() {
+      return JSON.parse(localStorage.getItem('yh_platform_messages') || '{}');
+    }
+
+    function savePlatformMessages(msgs) {
+      localStorage.setItem('yh_platform_messages', JSON.stringify(msgs));
       updateMsgBadge();
     }
 
     function updateMsgBadge() {
       const badge = document.getElementById('msg-count-badge');
-      const unreadCount = studentMessages.filter(m => !m.read).length;
+      const allMsgs = getPlatformMessages();
+      let unreadCount = 0;
+
+      if (currentUser.email === 'yhstella2@gmail.com') {
+        // 管理者計算所有學生傳來的未讀訊息
+        Object.keys(allMsgs).forEach(studentEmail => {
+          const list = allMsgs[studentEmail] || [];
+          unreadCount += list.filter(m => m.sender === 'student' && !m.read).length;
+        });
+      } else {
+        // 學生計算老師傳來的未讀訊息
+        const list = allMsgs[currentUser.email] || [];
+        unreadCount += list.filter(m => m.sender === 'admin' && !m.read).length;
+      }
+
       if (unreadCount > 0) {
         badge.innerText = unreadCount;
         badge.classList.remove('hidden');
@@ -375,32 +410,161 @@
       }
     }
 
-    function openStudentMessages() {
-      const container = document.getElementById('student-msg-list');
-      if (studentMessages.length === 0) {
-        container.innerHTML = `<div class="p-6 text-center text-slate-400 text-sm">目前沒有來自老師的訊息。</div>`;
-      } else {
-        studentMessages.forEach(m => m.read = true);
-        const allMsgs = JSON.parse(localStorage.getItem('yh_platform_messages') || '{}');
-        allMsgs[currentUser.email] = studentMessages;
-        localStorage.setItem('yh_platform_messages', JSON.stringify(allMsgs));
-        updateMsgBadge();
+    function openMessagesModal() {
+      const modal = document.getElementById('messages-modal');
+      const selector = document.getElementById('admin-target-selector');
+      const title = document.getElementById('modal-msg-title');
 
-        container.innerHTML = studentMessages.slice().reverse().map(m => `
-          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm space-y-1">
-            <div class="flex justify-between items-center text-xs text-slate-400">
-              <span>👨‍🏫 老師</span>
-              <span>📅 ${m.timestamp}</span>
-            </div>
-            <div class="text-slate-800 font-medium whitespace-pre-wrap">${m.text}</div>
-          </div>
-        `).join('');
+      if (currentUser.email === 'yhstella2@gmail.com') {
+        selector.classList.remove('hidden');
+        title.innerText = '📬 管理者訊息中心';
+        
+        // 載入所有學生名單到下拉選單
+        const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+        const studentEmails = Object.keys(allStudents);
+        const selectEl = document.getElementById('msg-target-student-select');
+
+        if (studentEmails.length === 0) {
+          selectEl.innerHTML = '<option value="">尚無學生紀錄</option>';
+          currentChatStudentEmail = '';
+        } else {
+          selectEl.innerHTML = studentEmails.map(e => `<option value="${e}">${e}</option>`).join('');
+          if (!currentChatStudentEmail || !studentEmails.includes(currentChatStudentEmail)) {
+            currentChatStudentEmail = studentEmails[0];
+          } else {
+            selectEl.value = currentChatStudentEmail;
+          }
+        }
+        renderAdminChatMessages();
+      } else {
+        selector.classList.add('hidden');
+        title.innerText = '📬 與老師的訊息對話';
+        currentChatStudentEmail = currentUser.email;
+        renderStudentChatMessages();
       }
-      document.getElementById('student-msg-modal').classList.remove('hidden');
+
+      modal.classList.remove('hidden');
     }
 
-    function closeStudentMessages() {
-      document.getElementById('student-msg-modal').classList.add('hidden');
+    function closeMessagesModal() {
+      document.getElementById('messages-modal').classList.add('hidden');
+      updateMsgBadge();
+      if (currentUser.email === 'yhstella2@gmail.com') {
+        loadAdminDashboard();
+      }
+    }
+
+    function switchAdminChatTarget() {
+      const selectEl = document.getElementById('msg-target-student-select');
+      currentChatStudentEmail = selectEl.value;
+      renderAdminChatMessages();
+    }
+
+    function renderStudentChatMessages() {
+      const container = document.getElementById('chat-messages-list');
+      const allMsgs = getPlatformMessages();
+      const list = allMsgs[currentUser.email] || [];
+
+      // 標記為已讀
+      list.forEach(m => {
+        if (m.sender === 'admin') m.read = true;
+      });
+      savePlatformMessages(allMsgs);
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">目前尚無對話紀錄，您可以向老師傳送訊息！</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(m => {
+        const isAdmin = m.sender === 'admin';
+        return `
+          <div class="flex flex-col ${isAdmin ? 'items-start' : 'items-end'}">
+            <div class="text-[10px] text-slate-400 mb-0.5">${isAdmin ? '👨‍🏫 老師' : '👤 您'} (${m.timestamp})</div>
+            <div class="p-3 rounded-2xl text-sm max-w-xs md:max-w-md ${isAdmin ? 'bg-white border border-slate-200 text-slate-800' : 'bg-brand-600 text-white'}">
+              ${m.text}
+            </div>
+          </div>
+        `;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function renderAdminChatMessages() {
+      const container = document.getElementById('chat-messages-list');
+      if (!currentChatStudentEmail) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">請選擇學生</div>`;
+        return;
+      }
+
+      const allMsgs = getPlatformMessages();
+      const list = allMsgs[currentChatStudentEmail] || [];
+
+      // 標記學生傳來的訊息為已讀
+      list.forEach(m => {
+        if (m.sender === 'student') m.read = true;
+      });
+      savePlatformMessages(allMsgs);
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">與 ${currentChatStudentEmail} 尚無對話紀錄。</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(m => {
+        const isStudent = m.sender === 'student';
+        return `
+          <div class="flex flex-col ${isStudent ? 'items-start' : 'items-end'}">
+            <div class="text-[10px] text-slate-400 mb-0.5">${isStudent ? `👤 ${currentChatStudentEmail}` : '🛡️ 您 (老師)'} (${m.timestamp})</div>
+            <div class="p-3 rounded-2xl text-sm max-w-xs md:max-w-md ${isStudent ? 'bg-white border border-slate-200 text-slate-800' : 'bg-brand-600 text-white'}">
+              ${m.text}
+            </div>
+          </div>
+        `;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendPlatformChatMessage() {
+      const inputEl = document.getElementById('chat-input-text');
+      const text = inputEl.value.trim();
+      if (!text) {
+        alert('請輸入訊息內容！');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+      const allMsgs = getPlatformMessages();
+      let targetEmail = currentUser.email === 'yhstella2@gmail.com' ? currentChatStudentEmail : currentUser.email;
+
+      if (!targetEmail) {
+        alert('請先選擇對話對象');
+        return;
+      }
+
+      if (!allMsgs[targetEmail]) {
+        allMsgs[targetEmail] = [];
+      }
+
+      const senderType = currentUser.email === 'yhstella2@gmail.com' ? 'admin' : 'student';
+
+      allMsgs[targetEmail].push({
+        sender: senderType,
+        timestamp: timeStr,
+        text: text,
+        read: false
+      });
+
+      savePlatformMessages(allMsgs);
+      inputEl.value = '';
+
+      if (currentUser.email === 'yhstella2@gmail.com') {
+        renderAdminChatMessages();
+      } else {
+        renderStudentChatMessages();
+      }
     }
 
     function saveUserWrongQuestions() {
@@ -441,6 +605,7 @@
       let logs = JSON.parse(localStorage.getItem(logKey) || '[]');
       
       const sessionData = {
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36.substring(2, 7)),
         date: dateKey,
         timestamp: `${dateKey} ${timeStr}`,
         timeOnly: timeStr,
@@ -486,14 +651,13 @@
         document.getElementById('tab-quiz').classList.add('hidden');
         document.getElementById('wrong-btn-banner').classList.add('hidden');
         document.getElementById('nav-home-btn').innerText = '管理者後台';
-        document.getElementById('nav-msg-btn').classList.add('hidden');
         loadAdminDashboard();
       } else {
         loadUserData();
         renderCalendar();
         loadQuestions();
-        document.getElementById('nav-msg-btn').classList.remove('hidden');
       }
+      updateMsgBadge();
     }
 
     function logout() {
@@ -550,7 +714,7 @@
       renderCalendar();
     }
 
-    // 管理者後台：改用日期分類，最新的放最上面，格式為「使用者A 時間 練習幾題, 錯幾題」
+    // 管理者後台：改用日期分類，最新在最上面，並支援刪除已看過的練習報告
     function loadAdminDashboard() {
       const container = document.getElementById('admin-records-container');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -571,6 +735,7 @@
           const timeOnly = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr;
           
           allSessions.push({
+            id: l.id || ('log_' + Math.random()),
             email: email,
             datePart: datePart,
             timestamp: timeStr,
@@ -636,9 +801,14 @@
                   <span class="text-red-600 font-bold ml-2">錯 ${s.wrong} 題</span>
                   <span class="text-slate-400 text-xs ml-2">(${s.range})</span>
                 </div>
-                <button onclick="document.getElementById('${wrongBoxId}').classList.toggle('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow">
-                  👁️ 點開看錯題 (${s.wrong}題)
-                </button>
+                <div class="flex items-center gap-2">
+                  <button onclick="document.getElementById('${wrongBoxId}').classList.toggle('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow">
+                    👁️ 點開看錯題 (${s.wrong}題)
+                  </button>
+                  <button onclick="deleteStudentRecord('${s.email}', '${s.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-red-200">
+                    🗑️ 刪除報告
+                  </button>
+                </div>
               </div>
 
               <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
@@ -657,59 +827,26 @@
         `;
       });
 
-      // 發送站內訊息區塊
-      html += `
-        <div class="mt-8 pt-6 border-t border-slate-200 bg-slate-50 p-6 rounded-2xl space-y-3">
-          <h3 class="text-base font-bold text-slate-800">✉️ 發送站內訊息給學生</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">選擇學生 Email</label>
-              <select id="admin-target-email" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white">
-                ${studentEmails.map(email => `<option value="${email}">${email}</option>`).join('')}
-              </select>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-xs font-semibold text-slate-600 mb-1">訊息內容</label>
-              <textarea id="admin-msg-input" rows="2" placeholder="請輸入要傳送給該學生的指導或鼓勵訊息..." class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
-            </div>
-          </div>
-          <div class="flex justify-end">
-            <button onclick="sendPlatformMessage()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow">
-              🚀 發送站內訊息
-            </button>
-          </div>
-        </div>
-      `;
-
       container.innerHTML = html;
     }
 
-    function sendPlatformMessage() {
-      const email = document.getElementById('admin-target-email').value;
-      const text = document.getElementById('admin-msg-input').value.trim();
+    function deleteStudentRecord(studentEmail, recordId) {
+      if (!confirm(`確定要刪除 ${studentEmail} 的這筆練習報告嗎？`)) return;
 
-      if (!text) {
-        alert('請輸入訊息內容！');
-        return;
+      // 1. 從該學生的 localStorage logs 刪除
+      let logs = JSON.parse(localStorage.getItem(`yh_logs_${studentEmail}`) || '[]');
+      logs = logs.filter(l => l.id !== recordId);
+      localStorage.setItem(`yh_logs_${studentEmail}`, JSON.stringify(logs));
+
+      // 2. 更新 all_students
+      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      if (allStudents[studentEmail]) {
+        allStudents[studentEmail].logs = logs;
+        localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
       }
 
-      const allMsgs = JSON.parse(localStorage.getItem('yh_platform_messages') || '{}');
-      if (!allMsgs[email]) {
-        allMsgs[email] = [];
-      }
-
-      const now = new Date();
-      const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-
-      allMsgs[email].push({
-        timestamp: timeStr,
-        text: text,
-        read: false
-      });
-
-      localStorage.setItem('yh_platform_messages', JSON.stringify(allMsgs));
-      document.getElementById('admin-msg-input').value = '';
-      alert(`已成功發送站內訊息給 ${email}！學生登入後即可在右上角收到。`);
+      loadAdminDashboard();
+      alert('已成功刪除該筆練習報告！');
     }
 
     async function loadQuestions() {

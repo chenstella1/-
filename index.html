@@ -102,8 +102,8 @@
     <!-- 管理者介面 (Admin Dashboard) -->
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：依日期分組的學生練習紀錄</h2>
-        <p class="text-sm text-slate-500 mb-6">可檢視各日期最新的學生練習狀況、錯題明細，並可直接於平台上發送站內訊息給學生。</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：依日期分類的學生練習紀錄 (最新在最上面)</h2>
+        <p class="text-sm text-slate-500 mb-6">可檢視各日期各學生的練習狀況、錯題明細，並可直接於平台上發送站內訊息給學生。</p>
         
         <div id="admin-records-container" class="space-y-6">
           <!-- 動態載入依日期分組的紀錄 -->
@@ -380,7 +380,6 @@
       if (studentMessages.length === 0) {
         container.innerHTML = `<div class="p-6 text-center text-slate-400 text-sm">目前沒有來自老師的訊息。</div>`;
       } else {
-        // 標記為已讀
         studentMessages.forEach(m => m.read = true);
         const allMsgs = JSON.parse(localStorage.getItem('yh_platform_messages') || '{}');
         allMsgs[currentUser.email] = studentMessages;
@@ -433,7 +432,6 @@
       if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
 
       const now = new Date();
-      // 格式化日期 MM/DD
       const mStr = String(now.getMonth() + 1).padStart(2, '0');
       const dStr = String(now.getDate()).padStart(2, '0');
       const dateKey = `${mStr}/${dStr}`;
@@ -445,6 +443,7 @@
       const sessionData = {
         date: dateKey,
         timestamp: `${dateKey} ${timeStr}`,
+        timeOnly: timeStr,
         total: totalCount,
         correct: correctCount,
         wrong: wrongCount,
@@ -516,8 +515,7 @@
 
       let dailyCorrectCounts = {};
       userLogs.forEach(log => {
-        // 從 log.timestamp (如 "11/12 14:30") 提取日期比對
-        const parts = log.timestamp.split(' ')[0].split('/');
+        const parts = (log.timestamp || '').split(' ')[0].split('/');
         if(parts.length === 2 && parseInt(parts[0]) === (month + 1)) {
           const dKey = `${year}-${String(parts[0]).padStart(2,'0')}-${String(parts[1]).padStart(2,'0')}`;
           dailyCorrectCounts[dKey] = (dailyCorrectCounts[dKey] || 0) + log.correct;
@@ -552,7 +550,7 @@
       renderCalendar();
     }
 
-    // 管理者後台：依日期分組顯示，最新的放最上面
+    // 管理者後台：改用日期分類，最新的放最上面，格式為「使用者A 時間 練習幾題, 錯幾題」
     function loadAdminDashboard() {
       const container = document.getElementById('admin-records-container');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -563,19 +561,20 @@
         return;
       }
 
-      // 收集所有學生的所有紀錄，並附加 email 屬性
       let allSessions = [];
       studentEmails.forEach(email => {
         const st = allStudents[email];
         const logs = st.logs || [];
         logs.forEach(l => {
-          // 確保 l.timestamp 存在，若無則補預設
           const timeStr = l.timestamp || l.date || '未知時間';
-          const datePart = timeStr.split(' ')[0]; // 如 "11/12"
+          const datePart = timeStr.split(' ')[0] || '未知日期';
+          const timeOnly = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr;
+          
           allSessions.push({
             email: email,
             datePart: datePart,
             timestamp: timeStr,
+            timeOnly: timeOnly,
             total: l.total,
             correct: l.correct,
             wrong: l.wrong,
@@ -590,10 +589,10 @@
         return;
       }
 
-      // 依照時間排序 (最新的排在最前面)
+      // 依照時間排序 (最新的排在最上面)
       allSessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      // 依日期分組 (datePart)
+      // 依日期分組
       let groupedByDate = {};
       allSessions.forEach(s => {
         if (!groupedByDate[s.datePart]) {
@@ -602,14 +601,13 @@
         groupedByDate[s.datePart].push(s);
       });
 
-      // 渲染依日期分組的區塊
       let html = '';
-      const dates = Object.keys(groupedByDate); // 可依需要排序日期
+      const dates = Object.keys(groupedByDate);
 
       dates.forEach(date => {
         const sessions = groupedByDate[date];
         let sessionListHtml = sessions.map((s, sIdx) => {
-          const wrongBoxId = `admin_wrong_${date}_${sIdx}_${s.email.replace(/[@.]/g, '_')}`;
+          const wrongBoxId = `admin_wrong_${date.replace('/', '_')}_${sIdx}_${s.email.replace(/[@.]/g, '_')}`;
           
           let wrongsDetailHtml = s.wrongItems.length > 0 ? s.wrongItems.map((w, wIdx) => {
             let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
@@ -632,8 +630,8 @@
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
               <div class="flex justify-between items-center flex-wrap gap-2">
                 <div class="text-sm">
-                  <span class="font-bold text-slate-900">👤 ${s.email}</span>
-                  <span class="text-slate-500 ml-2">🕒 ${s.timestamp}</span>
+                  <span class="font-bold text-slate-900">${s.email}</span>
+                  <span class="text-slate-500 ml-2">${s.timeOnly}</span>
                   <span class="text-brand-700 font-bold ml-3">練習 ${s.total} 題</span>
                   <span class="text-red-600 font-bold ml-2">錯 ${s.wrong} 題</span>
                   <span class="text-slate-400 text-xs ml-2">(${s.range})</span>
@@ -653,13 +651,13 @@
 
         html += `
           <div class="space-y-3">
-            <h3 class="text-lg font-black text-brand-700 border-b border-brand-200 pb-1">📅 ${date}</h3>
+            <h3 class="text-lg font-black text-brand-700 border-b border-brand-200 pb-1">${date}</h3>
             <div class="space-y-3 pl-2">${sessionListHtml}</div>
           </div>
         `;
       });
 
-      // 同時在下方提供發送平台訊息給學生的區塊
+      // 發送站內訊息區塊
       html += `
         <div class="mt-8 pt-6 border-t border-slate-200 bg-slate-50 p-6 rounded-2xl space-y-3">
           <h3 class="text-base font-bold text-slate-800">✉️ 發送站內訊息給學生</h3>
@@ -963,7 +961,7 @@
         card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[18px]";
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
-            <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
+            <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">(          ) ${idx + 1}.</span>
           </div>
           <div class="text-slate-900 font-bold mb-4 text-[18px]">${processTextWithLookup(q.title)}</div>
           
@@ -1039,6 +1037,7 @@
       }
     }
 
+    // 試卷與解答輸出：題號改為 (          ) 1.
     function renderPrintableQuizAndAnswers(container, questions) {
       const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
 
@@ -1062,7 +1061,7 @@
 
         html += `
           <div class="space-y-2">
-            <div class="font-bold text-slate-900 text-[18px]">第 ${idx + 1} 題：${q.title}</div>
+            <div class="font-bold text-slate-900 text-[18px]">( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) ${idx + 1}. ${q.title}</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4 text-[18px] text-slate-700">
               ${optsHtml}
             </div>
@@ -1084,7 +1083,7 @@
       questions.forEach((q, idx) => {
         html += `
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-[18px] space-y-1">
-            <div class="font-bold text-slate-900">第 ${idx + 1} 題：${q.title}</div>
+            <div class="font-bold text-slate-900">( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) ${idx + 1}. ${q.title}</div>
             <div class="text-brand-700 font-bold">正確答案：(${q.answer})</div>
             <div class="text-slate-600"><strong>【解析】</strong> ${q.analysis}</div>
           </div>
